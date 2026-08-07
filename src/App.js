@@ -20,7 +20,7 @@ const socket = io(BACKEND_URL, {
 // ── WARNING MESSAGE ──
 const WARNING_TEXT = `Iki gikoresho ni urubuga rwo gusesengura takitike (Deep Tactics Review). Gukoresha uyu mukino wemera ko wujuje amategeko yose yavuzwe.`;
 
-const LOGIN_INSTRUCTION = `KWINJIRA: ANDIKA "RUHAGO N'INSHUTI ARENA-DEEP TACTICS REVIEW"`;
+const LOGIN_INSTRUCTION = `KWINIURA: ANDIKA TDX-ID YAWE`;
 
 const inputStyle = {
   width: '100%',
@@ -43,18 +43,11 @@ function LoginScreen({ onLogin }) {
   const [error, setError] = useState('');
   const [refMode, setRefMode] = useState(false);
   const [refToken, setRefToken] = useState('');
-  const [accessCode, setAccessCode] = useState('');
 
   const handleFanLogin = async (e) => {
     e.preventDefault();
     if (!name.trim() || !txId.trim()) { setError('Please enter your name and TDX-ID.'); return; }
     if (txId.trim().length !== 11) { setError('TDX-ID must be exactly 11 digits.'); return; }
-    
-    // Check access code
-    if (accessCode.trim().toUpperCase() !== "RUHAGO N'INSHUTI ARENA-DEEP TACTICS REVIEW") {
-      setError('Invalid access code. Please enter the correct code.');
-      return;
-    }
     
     setLoading(true);
     setError('');
@@ -154,17 +147,6 @@ function LoginScreen({ onLogin }) {
 
         {!refMode ? (
           <form onSubmit={handleFanLogin}>
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ color: '#aaa', fontSize: 12, display: 'block', marginBottom: 5 }}>
-                Access Code
-              </label>
-              <input
-                value={accessCode}
-                onChange={e => setAccessCode(e.target.value)}
-                placeholder="Enter the access code..."
-                style={inputStyle}
-              />
-            </div>
             <div style={{ marginBottom: 12 }}>
               <label style={{ color: '#aaa', fontSize: 12, display: 'block', marginBottom: 5 }}>
                 Amazina (Izina)
