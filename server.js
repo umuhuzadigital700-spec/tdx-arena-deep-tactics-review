@@ -19,10 +19,52 @@ const io = socketIo(server, {
 app.use(cors());
 app.use(express.json());
 
+// ── FORMATION SLOT DEFINITIONS ──
+const FORMATION_SLOTS = {
+  '4-4-2': [
+    { label: 'GK', top: 88, left: 50 }, { label: 'LB', top: 70, left: 15 }, { label: 'CB1', top: 70, left: 35 }, { label: 'CB2', top: 70, left: 65 }, { label: 'RB', top: 70, left: 85 },
+    { label: 'LM', top: 50, left: 15 }, { label: 'CM1', top: 50, left: 35 }, { label: 'CM2', top: 50, left: 65 }, { label: 'RM', top: 50, left: 85 },
+    { label: 'ST1', top: 25, left: 35 }, { label: 'ST2', top: 25, left: 65 }
+  ],
+  '4-3-3': [
+    { label: 'GK', top: 88, left: 50 }, { label: 'LB', top: 70, left: 15 }, { label: 'CB1', top: 70, left: 35 }, { label: 'CB2', top: 70, left: 65 }, { label: 'RB', top: 70, left: 85 },
+    { label: 'CM1', top: 50, left: 25 }, { label: 'CM2', top: 50, left: 50 }, { label: 'CM3', top: 50, left: 75 },
+    { label: 'LW', top: 20, left: 20 }, { label: 'ST', top: 15, left: 50 }, { label: 'RW', top: 20, left: 80 }
+  ],
+  '3-5-2': [
+    { label: 'GK', top: 88, left: 50 }, { label: 'CB1', top: 70, left: 25 }, { label: 'CB2', top: 70, left: 50 }, { label: 'CB3', top: 70, left: 75 },
+    { label: 'LWB', top: 52, left: 10 }, { label: 'CM1', top: 50, left: 30 }, { label: 'CM2', top: 50, left: 50 }, { label: 'CM3', top: 50, left: 70 }, { label: 'RWB', top: 52, left: 90 },
+    { label: 'ST1', top: 22, left: 35 }, { label: 'ST2', top: 22, left: 65 }
+  ],
+  '4-5-1': [
+    { label: 'GK', top: 88, left: 50 }, { label: 'LB', top: 70, left: 15 }, { label: 'CB1', top: 70, left: 35 }, { label: 'CB2', top: 70, left: 65 }, { label: 'RB', top: 70, left: 85 },
+    { label: 'LM', top: 50, left: 10 }, { label: 'CM1', top: 50, left: 30 }, { label: 'CM2', top: 50, left: 50 }, { label: 'CM3', top: 50, left: 70 }, { label: 'RM', top: 50, left: 90 },
+    { label: 'ST', top: 18, left: 50 }
+  ],
+  '5-3-2': [
+    { label: 'GK', top: 88, left: 50 }, { label: 'LWB', top: 68, left: 10 }, { label: 'CB1', top: 70, left: 28 }, { label: 'CB2', top: 70, left: 50 }, { label: 'CB3', top: 70, left: 72 }, { label: 'RWB', top: 68, left: 90 },
+    { label: 'CM1', top: 48, left: 25 }, { label: 'CM2', top: 48, left: 50 }, { label: 'CM3', top: 48, left: 75 },
+    { label: 'ST1', top: 22, left: 35 }, { label: 'ST2', top: 22, left: 65 }
+  ],
+  '4-2-3-1': [
+    { label: 'GK', top: 88, left: 50 }, { label: 'LB', top: 72, left: 15 }, { label: 'CB1', top: 72, left: 35 }, { label: 'CB2', top: 72, left: 65 }, { label: 'RB', top: 72, left: 85 },
+    { label: 'DM1', top: 57, left: 35 }, { label: 'DM2', top: 57, left: 65 },
+    { label: 'LAM', top: 38, left: 20 }, { label: 'CAM', top: 35, left: 50 }, { label: 'RAM', top: 38, left: 80 },
+    { label: 'ST', top: 18, left: 50 }
+  ]
+};
+const FORMATIONS = Object.keys(FORMATION_SLOTS);
+
 // ── GAME STATE ──
 function freshGameState() {
   return {
     allViewers: [],
+    team1Formation: '4-4-2',
+    team2Formation: '4-4-2',
+    team1Name: 'Team 1',
+    team2Name: 'Team 2',
+    team1Picks: [],
+    team2Picks: [],
     deepTactics: {
       active: false,
       firstReviewFan: null,
@@ -40,13 +82,6 @@ function freshGameState() {
       },
       searchTerm: '',
     },
-    // ── FORMATION SETTINGS (for the pitch) ──
-    team1Formation: '4-4-2',
-    team2Formation: '4-4-2',
-    team1Name: 'Team 1',
-    team2Name: 'Team 2',
-    team1Picks: [],
-    team2Picks: [],
   };
 }
 
@@ -117,10 +152,8 @@ async function loadPickedPlayers() {
         }));
 
         if (newPool.length > 0) {
-          // Split players by team
           const team1Picks = newPool.filter(p => p.team && p.team.toLowerCase().includes('team 1'));
           const team2Picks = newPool.filter(p => p.team && p.team.toLowerCase().includes('team 2'));
-          // Any unassigned go to team1 as fallback
           const unassigned = newPool.filter(p => !p.team || !p.team.toLowerCase().includes('team'));
           
           state.team1Picks = [...team1Picks, ...unassigned].slice(0, 11);
@@ -321,9 +354,36 @@ io.on('connection', (socket) => {
     socket.emit('gameStateUpdate', getPublicState());
   });
 
+  // ── FORMATION CONTROL ──
+  socket.on('refSetFormation', ({ team, formation }) => {
+    if (team === 'team1') {
+      state.team1Formation = formation;
+    } else if (team === 'team2') {
+      state.team2Formation = formation;
+    }
+    broadcast();
+    io.emit('formationUpdated', { team, formation });
+  });
+
+  socket.on('refPlacePlayerOnPitch', ({ half, slotIndex, playerId }) => {
+    const halfSlots = half === 'team1' 
+      ? state.deepTactics.pitchState.team1Slots 
+      : state.deepTactics.pitchState.team2Slots;
+    
+    if (slotIndex < 0 || slotIndex >= 11) return;
+    
+    const player = (half === 'team1' ? state.team1Picks : state.team2Picks)
+      .find(p => String(p.id) === String(playerId));
+    
+    if (player) {
+      halfSlots[slotIndex] = player;
+      broadcast();
+      io.emit('deepTacticsState', state.deepTactics);
+    }
+  });
+
   // ── DEEP TACTICS REVIEW EVENTS ──
   socket.on('refInitDeepTactics', () => {
-    // Always allow in this app
     state.deepTactics.active = true;
     state.deepTactics.phase = 'ASSIGNING';
     state.deepTactics.pitchState = {
@@ -347,6 +407,7 @@ io.on('connection', (socket) => {
     io.emit('deepTacticsState', state.deepTactics);
   });
 
+  // ── ASSIGN REVIEW FANS BY TX ID (still available for direct assignment) ──
   socket.on('refAssignReviewFans', ({ firstFanTxId, secondFanTxId }) => {
     if (!state.deepTactics.active) return;
     
@@ -364,23 +425,39 @@ io.on('connection', (socket) => {
     io.emit('deepTacticsState', state.deepTactics);
   });
 
-  socket.on('refPlacePlayerOnPitch', ({ half, slotIndex, playerId }) => {
-    if (!state.deepTactics.active || state.deepTactics.phase === 'LIVE_DEMO') return;
+  socket.on('refAssignReviewFanById', ({ userId, role }) => {
+    if (!state.deepTactics.active) return;
     
-    const halfSlots = half === 'team1' 
-      ? state.deepTactics.pitchState.team1Slots 
-      : state.deepTactics.pitchState.team2Slots;
+    const viewer = state.allViewers.find(v => String(v.id) === userId);
+    if (!viewer) return;
     
-    if (slotIndex < 0 || slotIndex >= 11) return;
-    
-    const player = (half === 'team1' ? state.team1Picks : state.team2Picks)
-      .find(p => String(p.id) === String(playerId));
-    
-    if (player) {
-      halfSlots[slotIndex] = player;
-      broadcast();
-      io.emit('deepTacticsState', state.deepTactics);
+    if (role === 'first') {
+      state.deepTactics.firstReviewFan = viewer;
+    } else if (role === 'second') {
+      state.deepTactics.secondReviewFan = viewer;
     }
+    
+    if (state.deepTactics.firstReviewFan && state.deepTactics.secondReviewFan) {
+      state.deepTactics.phase = 'SETUP';
+    }
+    
+    broadcast();
+    io.emit('deepTacticsState', state.deepTactics);
+  });
+
+  socket.on('refRemoveReviewFan', ({ userId }) => {
+    if (!state.deepTactics.active) return;
+    
+    if (state.deepTactics.firstReviewFan && String(state.deepTactics.firstReviewFan.id) === userId) {
+      state.deepTactics.firstReviewFan = null;
+    }
+    if (state.deepTactics.secondReviewFan && String(state.deepTactics.secondReviewFan.id) === userId) {
+      state.deepTactics.secondReviewFan = null;
+    }
+    
+    state.deepTactics.phase = 'ASSIGNING';
+    broadcast();
+    io.emit('deepTacticsState', state.deepTactics);
   });
 
   socket.on('refOpenDemonstration', () => {
@@ -391,11 +468,21 @@ io.on('connection', (socket) => {
     io.emit('deepTacticsState', state.deepTactics);
   });
 
-  socket.on('refStartDemonstration', ({ fanTxId }) => {
+  // ── START DEMONSTRATION (by role, not ID) ──
+  socket.on('refStartDemonstration', ({ role }) => {
     if (!state.deepTactics.active || !state.deepTactics.pitchState.showDemo) return;
     
-    const fan = state.allViewers.find(v => String(v.txId) === fanTxId);
-    if (!fan) return;
+    let fan = null;
+    if (role === 'first') {
+      fan = state.deepTactics.firstReviewFan;
+    } else if (role === 'second') {
+      fan = state.deepTactics.secondReviewFan;
+    }
+    
+    if (!fan) {
+      socket.emit('deepTacticsError', { error: `No ${role} review fan assigned` });
+      return;
+    }
     
     state.deepTactics.activeDemonstrator = fan;
     state.deepTactics.phase = 'LIVE_DEMO';
@@ -513,6 +600,19 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('refStopDemonstration', () => {
+    if (!state.deepTactics.active) return;
+    
+    state.deepTactics.activeDemonstrator = null;
+    state.deepTactics.phase = 'DEMONSTRATION_READY';
+    state.deepTactics.pitchState.selectedSpots = [];
+    state.deepTactics.pitchState.animationQueue = [];
+    state.deepTactics.pitchState.isAnimating = false;
+    
+    broadcast();
+    io.emit('deepTacticsState', state.deepTactics);
+  });
+
   // ── HEARTBEAT ──
   socket.on('heartbeat', ({ txId }) => {
     if (!txId) return;
@@ -588,10 +688,9 @@ setInterval(() => {
 }, HEARTBEAT_CHECK_INTERVAL);
 
 // ── START SERVER ──
-const PORT = process.env.PORT || 4001; // Use different port than main app
+const PORT = process.env.PORT || 4001;
 
 loadPickedPlayers().then(() => {
-  // Initialize pitch with players
   state.deepTactics.pitchState.team1Slots = state.team1Picks.slice(0, 11);
   while (state.deepTactics.pitchState.team1Slots.length < 11) {
     state.deepTactics.pitchState.team1Slots.push(null);
