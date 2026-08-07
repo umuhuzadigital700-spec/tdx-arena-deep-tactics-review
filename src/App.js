@@ -1,0 +1,413 @@
+// src/App.js - TDX Arena Deep Tactics Review
+import React, { useEffect, useState, useCallback } from 'react';
+import io from 'socket.io-client';
+import RefereeDashboard from './RefereeDashboard';
+import DeepTacticsReview from './DeepTacticsReview';
+import { imageCache, CachedImage } from './imageCache';
+
+const BACKEND_URL = window.location.origin; // Auto-detects Railway URL
+
+const socket = io(BACKEND_URL, {
+  transports: ['polling', 'websocket'],
+  reconnection: true,
+  reconnectionAttempts: Infinity,
+  reconnectionDelay: 1000,
+  timeout: 20000,
+  forceNew: false,
+  upgrade: true,
+});
+
+// ── WARNING MESSAGE ──
+const WARNING_TEXT = `Iki gikoresho ni urubuga rwo gusesengura takitike (Deep Tactics Review). Gukoresha uyu mukino wemera ko wujuje amategeko yose yavuzwe.`;
+
+const LOGIN_INSTRUCTION = `KWINJIRA: ANDIKA "RUHAGO N'INSHUTI ARENA-DEEP TACTICS REVIEW"`;
+
+const inputStyle = {
+  width: '100%',
+  padding: '12px 14px',
+  background: 'rgba(255,255,255,0.07)',
+  border: '1px solid rgba(255,255,255,0.15)',
+  borderRadius: 8,
+  color: '#fff',
+  fontSize: 15,
+  outline: 'none',
+  boxSizing: 'border-box',
+};
+
+// ── Login Screen ──
+function LoginScreen({ onLogin }) {
+  const [name, setName] = useState('');
+  const [txId, setTxId] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [refLoading, setRefLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [refMode, setRefMode] = useState(false);
+  const [refToken, setRefToken] = useState('');
+  const [accessCode, setAccessCode] = useState('');
+
+  const handleFanLogin = async (e) => {
+    e.preventDefault();
+    if (!name.trim() || !txId.trim()) { setError('Please enter your name and TDX-ID.'); return; }
+    if (txId.trim().length !== 11) { setError('TDX-ID must be exactly 11 digits.'); return; }
+    
+    // Check access code
+    if (accessCode.trim().toUpperCase() !== "RUHAGO N'INSHUTI ARENA-DEEP TACTICS REVIEW") {
+      setError('Invalid access code. Please enter the correct code.');
+      return;
+    }
+    
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ txId: txId.trim(), name: name.trim() }),
+      });
+      const data = await res.json();
+      if (res.status === 400 || data.error === 'DUPLICATE_SESSION') {
+        setError(data.message || 'This TDX-ID is already actively in use.');
+        setLoading(false);
+        return;
+      }
+      if (data.valid) {
+        socket.emit('joinWaitingRoom', { name: name.trim(), ticketCode: txId.trim() });
+        onLogin({ name: data.matchName || name.trim(), txId: txId.trim(), isVIP: data.isVIP, amount: data.amount, role: 'fan' });
+      } else {
+        setError('TDX-ID not verified. Check the SMS you received.');
+      }
+    } catch {
+      setError('Network error. Please try again.');
+    }
+    setLoading(false);
+  };
+
+  const handleRefLogin = (e) => {
+    e.preventDefault();
+    if (!refToken.trim() || refLoading) return;
+    const token = refToken.trim();
+    setRefLoading(true);
+    setError('');
+    const timeout = setTimeout(() => {
+      setRefLoading(false);
+      setError('Server did not respond. Check your internet.');
+    }, 6000);
+    socket.once('refConfirm', (ok) => {
+      clearTimeout(timeout);
+      setRefLoading(false);
+      if (ok) {
+        onLogin({ name: 'Referee', txId: 'REF', isVIP: true, role: 'referee', token });
+      } else {
+        setError('Invalid referee token. Try again.');
+      }
+    });
+    socket.emit('claimReferee', token);
+  };
+
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 16,
+      fontFamily: "'Segoe UI', sans-serif",
+    }}>
+      <div style={{ width: '100%', maxWidth: 440 }}>
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <div style={{
+            fontSize: 40,
+            fontWeight: 900,
+            background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            letterSpacing: 2,
+          }}>🧠 DEEP TACTICS</div>
+          <div style={{ color: '#aaa', fontSize: 13, letterSpacing: 2, textTransform: 'uppercase' }}>
+            Review Arena
+          </div>
+        </div>
+
+        <div style={{
+          background: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,200,0,0.25)',
+          borderRadius: 12,
+          padding: '16px 18px',
+          marginBottom: 20,
+        }}>
+          <p style={{ color: '#ccc', fontSize: 12.5, lineHeight: 1.7, margin: 0 }}>
+            {WARNING_TEXT}
+          </p>
+          <div style={{
+            background: '#FFD700',
+            color: '#000',
+            borderRadius: 8,
+            padding: '10px 14px',
+            fontWeight: 800,
+            fontSize: 14.5,
+            marginTop: 12,
+          }}>
+            {LOGIN_INSTRUCTION}
+          </div>
+        </div>
+
+        {!refMode ? (
+          <form onSubmit={handleFanLogin}>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ color: '#aaa', fontSize: 12, display: 'block', marginBottom: 5 }}>
+                Access Code
+              </label>
+              <input
+                value={accessCode}
+                onChange={e => setAccessCode(e.target.value)}
+                placeholder="Enter the access code..."
+                style={inputStyle}
+              />
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ color: '#aaa', fontSize: 12, display: 'block', marginBottom: 5 }}>
+                Amazina (Izina)
+              </label>
+              <input
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="Enter your full name"
+                maxLength={60}
+                style={inputStyle}
+              />
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ color: '#aaa', fontSize: 12, display: 'block', marginBottom: 5 }}>
+                TDX-ID (11 digits)
+              </label>
+              <input
+                value={txId}
+                onChange={e => setTxId(e.target.value.replace(/\D/g, '').substring(0, 11))}
+                placeholder="00000000000"
+                inputMode="numeric"
+                maxLength={11}
+                style={{ ...inputStyle, letterSpacing: 4, fontWeight: 700, fontSize: 18 }}
+              />
+            </div>
+            {error && (
+              <div style={{
+                background: 'rgba(220,50,50,0.15)',
+                border: '1px solid rgba(220,50,50,0.4)',
+                borderRadius: 8,
+                padding: '10px 14px',
+                color: '#ff6b6b',
+                fontSize: 13,
+                marginBottom: 14,
+              }}>
+                ⚠️ {error}
+              </div>
+            )}
+            <button
+              type="submit"
+              disabled={loading || txId.length !== 11 || !name.trim()}
+              style={{
+                width: '100%',
+                padding: '14px 0',
+                background: loading ? '#555' : 'linear-gradient(135deg, #FFD700, #FFA500)',
+                color: '#000',
+                border: 'none',
+                borderRadius: 10,
+                fontWeight: 800,
+                fontSize: 15,
+                cursor: loading ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {loading ? '⏳ Checking...' : '✅ LOGIN'}
+            </button>
+            <div
+              onClick={() => setRefMode(true)}
+              style={{ textAlign: 'center', marginTop: 16, color: '#555', fontSize: 11, cursor: 'pointer' }}
+            >
+              · · ·
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={handleRefLogin}>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ color: '#aaa', fontSize: 12, display: 'block', marginBottom: 5 }}>
+                Referee Token
+              </label>
+              <input
+                type="password"
+                value={refToken}
+                onChange={e => setRefToken(e.target.value)}
+                placeholder="Enter referee password"
+                style={inputStyle}
+                autoFocus
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={refLoading}
+              style={{
+                width: '100%', padding: '13px 0',
+                background: refLoading ? '#555' : '#1976d2', color: 'white',
+                border: 'none', borderRadius: 10,
+                fontWeight: 700, fontSize: 15,
+                cursor: refLoading ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {refLoading ? '⏳ Checking...' : '🔑 Login as Referee'}
+            </button>
+            <div
+              onClick={() => setRefMode(false)}
+              style={{ textAlign: 'center', marginTop: 12, color: '#555', fontSize: 12, cursor: 'pointer' }}
+            >
+              ← Back
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Main App ──
+export default function App() {
+  const [user, setUser] = useState(null);
+  const [gs, setGs] = useState(null);
+  const [refOk, setRefOk] = useState(false);
+  const [connected, setConnected] = useState(false);
+  const [showDeepTactics, setShowDeepTactics] = useState(false);
+
+  // ── HEARTBEAT ──
+  useEffect(() => {
+    const heartbeatInterval = setInterval(() => {
+      if (socket && socket.connected && user?.txId) {
+        socket.emit('heartbeat', { txId: user.txId });
+      }
+    }, 10000);
+    return () => clearInterval(heartbeatInterval);
+  }, [socket, user]);
+
+  // ── SOCKET LISTENERS ──
+  useEffect(() => {
+    socket.on('connect', () => setConnected(true));
+    socket.on('disconnect', () => setConnected(false));
+    socket.on('gameStateUpdate', (data) => setGs(data));
+    socket.on('refConfirm', (ok) => { if (ok) setRefOk(true); });
+    socket.on('loginError', (err) => alert(err.message || 'Login Error'));
+    
+    socket.on('deepTacticsState', (data) => {
+      if (data && data.deepTactics) {
+        setGs(prev => ({ ...prev, deepTactics: data.deepTactics }));
+      }
+    });
+
+    return () => {
+      socket.off('connect');
+      socket.off('disconnect');
+      socket.off('gameStateUpdate');
+      socket.off('refConfirm');
+      socket.off('loginError');
+      socket.off('deepTacticsState');
+    };
+  }, []);
+
+  // ── DEEP TACTICS OVERLAY TOGGLE ──
+  useEffect(() => {
+    window._toggleDeepTactics = (show) => {
+      setShowDeepTactics(show);
+    };
+    return () => {
+      window._toggleDeepTactics = null;
+    };
+  }, []);
+
+  if (!connected) {
+    return (
+      <div style={{
+        minHeight: '100vh', background: '#0f0f1a',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: '#888', fontFamily: "'Segoe UI',sans-serif", flexDirection: 'column', gap: 12,
+      }}>
+        <div style={{ fontSize: 32 }}>⏳</div>
+        <div>Connecting to server...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginScreen onLogin={setUser} />;
+  }
+
+  if (user.role === 'referee') {
+    return <RefereeDashboard socket={socket} gameState={gs} isReferee={refOk} token={user.token} />;
+  }
+
+  // ── FAN VIEW ──
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #0f0f1a, #1a1a2e)',
+      color: '#fff',
+      fontFamily: "'Segoe UI', sans-serif",
+      padding: 16,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <div>
+          <span style={{ fontWeight: 800, fontSize: 20, color: '#FFD700' }}>🧠 DEEP TACTICS</span>
+          <span style={{ color: '#aaa', fontSize: 12, marginLeft: 8 }}>Review</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {user.isVIP && (
+            <span style={{
+              background: 'linear-gradient(135deg,#FFD700,#FFA500)',
+              color: '#000', fontSize: 11, fontWeight: 800,
+              padding: '3px 10px', borderRadius: 20,
+            }}>⭐ VIP</span>
+          )}
+          <span style={{ color: '#888', fontSize: 12 }}>{user.name}</span>
+        </div>
+      </div>
+
+      <div style={{
+        background: 'rgba(255,215,0,0.1)',
+        border: '1px solid rgba(255,215,0,0.3)',
+        borderRadius: 10,
+        padding: '20px',
+        textAlign: 'center',
+        marginBottom: 16,
+      }}>
+        <div style={{ fontSize: 18, fontWeight: 700, color: '#FFD700' }}>
+          🧠 Deep Tactics Review
+        </div>
+        <div style={{ fontSize: 13, color: '#aaa', marginTop: 8 }}>
+          Waiting for the referee to start the demonstration...
+        </div>
+        <div style={{ fontSize: 12, color: '#888', marginTop: 8 }}>
+          {gs?.deepTactics?.phase || 'IDLE'}
+          {gs?.deepTactics?.activeDemonstrator?.name && (
+            <span> — Active: {gs.deepTactics.activeDemonstrator.name}</span>
+          )}
+        </div>
+      </div>
+
+      {/* Deep Tactics Review Overlay for Fans */}
+      {showDeepTactics && (
+        <DeepTacticsReview
+          gameState={gs}
+          socket={socket}
+          user={user}
+          onClose={() => {
+            setShowDeepTactics(false);
+            window._toggleDeepTactics = null;
+          }}
+          isReferee={user?.role === 'referee'}
+          isReviewFan={gs?.deepTactics?.firstReviewFan?.txId === user?.txId ||
+            gs?.deepTactics?.secondReviewFan?.txId === user?.txId}
+          reviewRole={
+            gs?.deepTactics?.firstReviewFan?.txId === user?.txId ? 'first' :
+              gs?.deepTactics?.secondReviewFan?.txId === user?.txId ? 'second' : null
+          }
+        />
+      )}
+    </div>
+  );
+}
