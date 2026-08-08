@@ -1,4 +1,4 @@
-// src/App.js - TDX Arena Deep Tactics Review (FULLY MOBILE RESPONSIVE)
+// src/App.js - TDX Arena Deep Tactics Review (FULLY WORKING)
 import React, { useEffect, useState, useCallback } from 'react';
 import io from 'socket.io-client';
 import RefereeDashboard from './RefereeDashboard';
@@ -300,7 +300,6 @@ export default function App() {
       });
     });
 
-    // ── Show/hide review overlay for fans ──
     socket.on('demonstrationControl', ({ hasControl }) => {
       setShowReviewOverlay(hasControl);
     });
@@ -317,7 +316,6 @@ export default function App() {
     };
   }, []);
 
-  // ── Global toggle for Referee to open overlay ──
   useEffect(() => {
     window._toggleDeepTactics = (show) => {
       setShowReviewOverlay(show);
@@ -354,14 +352,11 @@ export default function App() {
     return <RefereeDashboard socket={socket} gameState={gs} isReferee={refOk} token={user.token} />;
   }
 
-  // ── FAN VIEW ──
   const isReviewFan = gs?.deepTactics?.firstReviewFan?.txId === user?.txId ||
                       gs?.deepTactics?.secondReviewFan?.txId === user?.txId;
   const reviewRole = gs?.deepTactics?.firstReviewFan?.txId === user?.txId ? 'first' :
                      gs?.deepTactics?.secondReviewFan?.txId === user?.txId ? 'second' : null;
 
-  // Fan should see overlay if:
-  // 1. They are a review fan AND (demonstration is live OR showReviewOverlay is true)
   const shouldShowOverlay = isReviewFan && 
     (gs?.deepTactics?.phase === 'LIVE_DEMO' || showReviewOverlay);
 
