@@ -1,4 +1,4 @@
-// src/DeepTacticsReview.js - Full Interactive Pitch for Reviewers (FINAL)
+// src/DeepTacticsReview.js - Full Interactive Pitch for Reviewers (FIXED)
 import React, { useState, useEffect, useRef } from 'react';
 
 const DEEP_TACTICS_STYLES = {
@@ -38,7 +38,9 @@ const DEEP_TACTICS_STYLES = {
     borderRadius: '12px',
     border: '2px solid #4caf50',
     overflow: 'hidden',
-    minHeight: '500px',
+    aspectRatio: '16/9', // ── LANDSCAPE ──
+    minHeight: '400px',
+    maxHeight: '70vh',
     cursor: 'default',
   },
   halfLabel: {
@@ -51,23 +53,25 @@ const DEEP_TACTICS_STYLES = {
   },
   slotCircle: {
     position: 'absolute',
-    width: '36px',
-    height: '36px',
+    width: '44px', // ── LARGER FOR READABLE NAMES ──
+    height: '44px',
     borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '7px',
+    fontSize: '8px',
     fontWeight: 'bold',
     color: '#fff',
     textAlign: 'center',
     overflow: 'hidden',
-    wordBreak: 'break-all',
+    wordBreak: 'break-word', // ── PROPER WORD WRAPPING ──
     transform: 'translate(-50%, -50%)',
     transition: 'all 0.2s ease',
     cursor: 'grab',
     border: '2px solid rgba(255,255,255,0.3)',
     background: 'rgba(255,255,255,0.05)',
+    padding: '2px',
+    lineHeight: '1.1',
   },
   controlToolbar: {
     display: 'flex',
@@ -300,8 +304,31 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
           <PitchMarkings />
           {renderHalf('team1', slots1, team1Slots, gs.team1Name || 'Team 1', '#1565c0')}
           {renderHalf('team2', slots2, team2Slots, gs.team2Name || 'Team 2', '#b71c1c')}
-          <div style={{ position: 'absolute', top: `${ballPos.y}%`, left: `${ballPos.x}%`, transform: 'translate(-50%, -50%)', width: '16px', height: '16px', borderRadius: '50%', background: 'radial-gradient(circle at 30% 30%, #fff, #ddd)', boxShadow: '0 0 20px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.2)', zIndex: 10, pointerEvents: 'none', border: '2px solid #555' }}>
-            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '4px', height: '4px', borderRadius: '50%', background: '#222' }} />
+          {/* ── SMALLER, SEMI-TRANSPARENT BALL ── */}
+          <div style={{
+            position: 'absolute',
+            top: `${ballPos.y}%`,
+            left: `${ballPos.x}%`,
+            transform: 'translate(-50%, -50%)',
+            width: '14px',
+            height: '14px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(200,200,200,0.8))',
+            boxShadow: '0 0 15px rgba(255,255,255,0.2)',
+            zIndex: 5,
+            pointerEvents: 'none',
+            border: '1.5px solid rgba(255,255,255,0.6)',
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '3px',
+              height: '3px',
+              borderRadius: '50%',
+              background: 'rgba(0,0,0,0.3)',
+            }} />
           </div>
         </div>
       </div>
