@@ -1,4 +1,4 @@
-// server.js — TDX Arena Deep Tactics Review Backend (FINAL FIXED)
+// server.js — TDX Arena Deep Tactics Review Backend (FINAL WORKING)
 const PLAYERS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTbZ1scBQnek93hKRTCjN74gBCWz7JV7hP2gw4Zkw58TI93kScE-r61IB6UDoUe4miKn1oH2tis7F7r/pub?gid=0&single=true&output=csv';
 const PAYMENT_VERIFY_URL = 'https://script.google.com/macros/s/AKfycby53O0rxnbNv3i7gLkxAZDmSVbjtAD6LEpEwE4nelF0sFNXXqInNFsvrZfnszPjbcGk/exec';
 const VIP_THRESHOLD = 2000;
