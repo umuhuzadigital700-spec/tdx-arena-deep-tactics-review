@@ -1,4 +1,4 @@
-// src/DeepTacticsReview.js - Full Interactive Pitch for Reviewers
+// src/DeepTacticsReview.js - Full Interactive Pitch for Reviewers (FINAL)
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 const DEEP_TACTICS_STYLES = {
@@ -69,25 +69,6 @@ const DEEP_TACTICS_STYLES = {
     border: '2px solid rgba(255,255,255,0.3)',
     background: 'rgba(255,255,255,0.05)',
   },
-  playerPool: {
-    background: '#111',
-    padding: '8px',
-    borderRadius: '6px',
-    maxHeight: '120px',
-    overflowY: 'auto',
-  },
-  searchBar: {
-    width: '100%',
-    padding: '6px 10px',
-    background: 'rgba(255,255,255,0.07)',
-    border: '1px solid rgba(255,255,255,0.15)',
-    borderRadius: '4px',
-    color: '#fff',
-    fontSize: '12px',
-    outline: 'none',
-    boxSizing: 'border-box',
-    marginBottom: '6px',
-  },
   controlToolbar: {
     display: 'flex',
     gap: '8px',
@@ -108,7 +89,6 @@ const DEEP_TACTICS_STYLES = {
   },
 };
 
-// ── Formation slot data ──
 const FORMATION_SLOTS_DTR = {
   '4-4-2': [
     { label: 'GK', top: 88, left: 50 }, { label: 'LB', top: 70, left: 15 }, { label: 'CB1', top: 70, left: 35 }, { label: 'CB2', top: 70, left: 65 }, { label: 'RB', top: 70, left: 85 },
@@ -143,198 +123,46 @@ const FORMATION_SLOTS_DTR = {
   ]
 };
 
-// ── Pitch Markings Component ──
 function PitchMarkings() {
   return (
     <>
-      {/* Center circle */}
-      <div style={{
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: '80px',
-        height: '80px',
-        borderRadius: '50%',
-        border: '2px solid rgba(255,255,255,0.15)',
-        pointerEvents: 'none',
-      }} />
-      {/* Center line */}
-      <div style={{
-        position: 'absolute',
-        top: '50%',
-        left: 0,
-        right: 0,
-        height: '2px',
-        background: 'rgba(255,255,255,0.15)',
-        pointerEvents: 'none',
-      }} />
-      {/* Center dot */}
-      <div style={{
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: '6px',
-        height: '6px',
-        borderRadius: '50%',
-        background: 'rgba(255,255,255,0.3)',
-        pointerEvents: 'none',
-      }} />
-      {/* Team 1 penalty area */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: '20%',
-        right: '20%',
-        height: '18%',
-        border: '2px solid rgba(255,255,255,0.15)',
-        borderTop: 'none',
-        pointerEvents: 'none',
-      }} />
-      {/* Team 2 penalty area */}
-      <div style={{
-        position: 'absolute',
-        bottom: 0,
-        left: '20%',
-        right: '20%',
-        height: '18%',
-        border: '2px solid rgba(255,255,255,0.15)',
-        borderBottom: 'none',
-        pointerEvents: 'none',
-      }} />
-      {/* Team 1 goal box */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: '35%',
-        right: '35%',
-        height: '8%',
-        border: '2px solid rgba(255,255,255,0.1)',
-        borderTop: 'none',
-        pointerEvents: 'none',
-      }} />
-      {/* Team 2 goal box */}
-      <div style={{
-        position: 'absolute',
-        bottom: 0,
-        left: '35%',
-        right: '35%',
-        height: '8%',
-        border: '2px solid rgba(255,255,255,0.1)',
-        borderBottom: 'none',
-        pointerEvents: 'none',
-      }} />
-      {/* Corner arcs */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '20px',
-        height: '20px',
-        border: '2px solid rgba(255,255,255,0.1)',
-        borderRight: 'none',
-        borderBottom: 'none',
-        borderRadius: '50% 0 0 0',
-        pointerEvents: 'none',
-      }} />
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        right: 0,
-        width: '20px',
-        height: '20px',
-        border: '2px solid rgba(255,255,255,0.1)',
-        borderLeft: 'none',
-        borderBottom: 'none',
-        borderRadius: '0 50% 0 0',
-        pointerEvents: 'none',
-      }} />
-      <div style={{
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        width: '20px',
-        height: '20px',
-        border: '2px solid rgba(255,255,255,0.1)',
-        borderRight: 'none',
-        borderTop: 'none',
-        borderRadius: '0 0 0 50%',
-        pointerEvents: 'none',
-      }} />
-      <div style={{
-        position: 'absolute',
-        bottom: 0,
-        right: 0,
-        width: '20px',
-        height: '20px',
-        border: '2px solid rgba(255,255,255,0.1)',
-        borderLeft: 'none',
-        borderTop: 'none',
-        borderRadius: '0 0 50% 0',
-        pointerEvents: 'none',
-      }} />
+      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '80px', height: '80px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.15)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '2px', background: 'rgba(255,255,255,0.15)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: '18%', border: '2px solid rgba(255,255,255,0.15)', borderTop: 'none', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: 0, left: '20%', right: '20%', height: '18%', border: '2px solid rgba(255,255,255,0.15)', borderBottom: 'none', pointerEvents: 'none' }} />
     </>
   );
 }
 
-// ── Main Component ──
-export default function DeepTacticsReview({ 
-  gameState, 
-  socket, 
-  user, 
-  onClose,
-  isReferee,
-  isReviewFan,
-  reviewRole
-}) {
+export default function DeepTacticsReview({ gameState, socket, user, onClose, isReferee, isReviewFan, reviewRole }) {
   const [gs, setGs] = useState(gameState || {});
   const [pitchState, setPitchState] = useState({});
   const [selectedTool, setSelectedTool] = useState(null);
-  const [selectedPlayer, setSelectedPlayer] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [animationStep, setAnimationStep] = useState(null);
-  const [showDemoReady, setShowDemoReady] = useState(false);
-  
   const pitchRef = useRef(null);
   
-  // ── Subscribe to deep tactics updates ──
   useEffect(() => {
     if (!socket) return;
-    
     const handleStateUpdate = (data) => {
       if (data && data.deepTactics) {
         setPitchState(data.deepTactics.pitchState || {});
         setGs(prev => ({ ...prev, deepTactics: data.deepTactics }));
-        // Check if demo is ready
-        if (data.deepTactics.phase === 'DEMONSTRATION_READY') {
-          setShowDemoReady(true);
-        }
       }
     };
-    
     const handleAnimationStep = (stepData) => {
       setAnimationStep(stepData);
       setTimeout(() => setAnimationStep(null), 500);
     };
-    
-    const handleReviewHandoff = ({ newDemonstrator }) => {
-      setShowDemoReady(false);
-    };
-    
     socket.on('deepTacticsState', handleStateUpdate);
     socket.on('animationStep', handleAnimationStep);
-    socket.on('reviewHandoff', handleReviewHandoff);
-    
     return () => {
       socket.off('deepTacticsState', handleStateUpdate);
       socket.off('animationStep', handleAnimationStep);
-      socket.off('reviewHandoff', handleReviewHandoff);
     };
   }, [socket]);
   
-  // ── Get formation slots ──
   const formation1 = gs.team1Formation || '4-4-2';
   const formation2 = gs.team2Formation || '4-4-2';
   const slots1 = FORMATION_SLOTS_DTR[formation1] || FORMATION_SLOTS_DTR['4-4-2'];
@@ -345,38 +173,16 @@ export default function DeepTacticsReview({
   const ballPos = pitchState.ballPosition || { x: 50, y: 50 };
   const selectedSpots = pitchState.selectedSpots || [];
   const isAnimating = pitchState.isAnimating || false;
-  const showDemo = pitchState.showDemo || false;
   
-  // ── Determine if user can interact ──
   const isActiveDemonstrator = isReviewFan && 
     reviewRole === 'first' && 
     gs.deepTactics?.activeDemonstrator?.txId === user?.txId;
   
   const canInteract = isReferee || isActiveDemonstrator;
   
-  // ── Handle spot click for player placement (Referee only) ──
-  const handleSpotClick = (half, index) => {
-    if (!isReferee) return;
-    if (!selectedPlayer) return;
-    const halfSlots = half === 'team1' ? team1Slots : team2Slots;
-    if (halfSlots[index]) return; // Slot already filled
-    socket.emit('refPlacePlayerOnPitch', { half, slotIndex: index, playerId: selectedPlayer });
-    setSelectedPlayer(null);
-  };
-  
-  // ── Handle player selection (Referee only) ──
-  const handlePlayerSelect = (playerId) => {
-    if (!isReferee) return;
-    setSelectedPlayer(selectedPlayer === playerId ? null : playerId);
-  };
-  
-  // ── Handle tool activation ──
   const handleToolClick = (tool) => {
     if (!canInteract) return;
-    if (selectedTool === tool) {
-      setSelectedTool(null);
-      return;
-    }
+    if (selectedTool === tool) { setSelectedTool(null); return; }
     setSelectedTool(tool);
     if (tool === 'CLEAR_ANIMATION') {
       socket.emit('demoBallAction', { action: 'CLEAR_ANIMATION' });
@@ -384,7 +190,6 @@ export default function DeepTacticsReview({
     }
   };
   
-  // ── Handle ball placement ──
   const handleBallPlacement = (half, index) => {
     if (!canInteract) return;
     if (selectedTool !== 'SET_BALL') return;
@@ -392,7 +197,6 @@ export default function DeepTacticsReview({
     setSelectedTool(null);
   };
   
-  // ── Handle drag ──
   const handleDragStart = (e, half, index) => {
     if (!isActiveDemonstrator) return;
     setIsDragging(true);
@@ -408,35 +212,11 @@ export default function DeepTacticsReview({
     socket.emit('demoMovePlayer', { half, slotIndex: index, newX: x, newY: y });
   };
   
-  // ── Get all players for Referee pool ──
-  const allPlayers = [...(gs.team1Picks || []), ...(gs.team2Picks || [])];
-  const filteredPlayers = allPlayers.filter(p => 
-    p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.position?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  
-  // ── Render pitch helper ──
-  const renderHalf = (half, slots, teamSlots, teamName, teamColor) => {
+  const renderHalf = (half, slotDefs, teamSlots, teamName, teamColor) => {
     const isTopHalf = half === 'team1';
-    const slotDefs = half === 'team1' ? slots1 : slots2;
-    const isRefereeView = isReferee;
-    
     return (
-      <div style={{
-        position: 'absolute',
-        top: isTopHalf ? 0 : '50%',
-        left: 0,
-        right: 0,
-        height: '50%',
-        borderBottom: isTopHalf ? '2px dashed rgba(255,255,255,0.15)' : 'none',
-        borderTop: !isTopHalf ? '2px dashed rgba(255,255,255,0.15)' : 'none',
-      }}>
-        <div style={{ ...DEEP_TACTICS_STYLES.halfLabel, 
-          top: isTopHalf ? '8px' : 'auto', 
-          bottom: !isTopHalf ? '8px' : 'auto',
-          left: '50%', 
-          transform: 'translateX(-50%)' 
-        }}>
+      <div style={{ position: 'absolute', top: isTopHalf ? 0 : '50%', left: 0, right: 0, height: '50%', borderBottom: isTopHalf ? '2px dashed rgba(255,255,255,0.15)' : 'none', borderTop: !isTopHalf ? '2px dashed rgba(255,255,255,0.15)' : 'none' }}>
+        <div style={{ ...DEEP_TACTICS_STYLES.halfLabel, top: isTopHalf ? '8px' : 'auto', bottom: !isTopHalf ? '8px' : 'auto', left: '50%', transform: 'translateX(-50%)' }}>
           {teamName || (half === 'team1' ? 'Team 1' : 'Team 2')} ({half === 'team1' ? formation1 : formation2})
         </div>
         {slotDefs.map((slot, idx) => {
@@ -444,7 +224,6 @@ export default function DeepTacticsReview({
           const isSelected = selectedSpots.includes(`${half}-${idx}`);
           const isAnimatingHighlight = animationStep?.highlightSlot === idx && animationStep?.half === half;
           const isEmpty = !player;
-          const isRefereePlacing = isRefereeView && selectedPlayer && isEmpty;
           
           return (
             <div
@@ -456,20 +235,12 @@ export default function DeepTacticsReview({
                 background: player ? teamColor : 'rgba(255,255,255,0.05)',
                 border: isSelected ? '3px dashed #FFD700' : 
                         isAnimatingHighlight ? '3px solid #4caf50' :
-                        isRefereePlacing ? '3px dashed #FFD700' :
                         player ? '2px solid #fff' : '2px solid rgba(255,255,255,0.2)',
-                boxShadow: isSelected ? '0 0 20px rgba(255,215,0,0.3)' : 
-                           isRefereePlacing ? '0 0 20px rgba(255,215,0,0.2)' : 'none',
-                cursor: isActiveDemonstrator ? 'grab' : 
-                        isRefereeView && (isEmpty && selectedPlayer) ? 'pointer' : 
-                        isRefereeView && isEmpty ? 'default' : 'default',
-                width: isRefereeView ? '40px' : '32px',
-                height: isRefereeView ? '40px' : '32px',
+                boxShadow: isSelected ? '0 0 20px rgba(255,215,0,0.3)' : 'none',
+                cursor: isActiveDemonstrator ? 'grab' : 'default',
               }}
               onClick={() => {
-                if (isRefereeView && isEmpty && selectedPlayer) {
-                  handleSpotClick(half, idx);
-                } else if (selectedTool === 'SET_BALL' && canInteract) {
+                if (selectedTool === 'SET_BALL' && canInteract) {
                   handleBallPlacement(half, idx);
                 } else if (selectedTool === 'SELECT_SPOT' && canInteract) {
                   const action = isSelected ? 'deselect' : 'select';
@@ -478,9 +249,7 @@ export default function DeepTacticsReview({
               }}
               onMouseDown={(e) => handleDragStart(e, half, idx)}
               onMouseUp={(e) => handleDragEnd(e, half, idx)}
-              onMouseLeave={(e) => {
-                if (isDragging) handleDragEnd(e, half, idx);
-              }}
+              onMouseLeave={(e) => { if (isDragging) handleDragEnd(e, half, idx); }}
             >
               {player ? player.name : slot.label}
             </div>
@@ -490,169 +259,55 @@ export default function DeepTacticsReview({
     );
   };
   
-  // ── Render ──
   return (
     <div style={DEEP_TACTICS_STYLES.overlay}>
-      {/* Header */}
       <div style={DEEP_TACTICS_STYLES.header}>
         <div>
-          <span style={{ fontWeight: 800, fontSize: '20px', color: '#FFD700' }}>
-            ⚽ Deep Tactics Review
-          </span>
+          <span style={{ fontWeight: 800, fontSize: '20px', color: '#FFD700' }}>⚽ Deep Tactics Review</span>
           <span style={{ marginLeft: '12px', fontSize: '12px', color: '#888' }}>
             {isReferee ? '🔴 Referee View' : isReviewFan ? '👤 Review Fan' : '👀 Spectator View'}
           </span>
         </div>
-        <button onClick={onClose} style={{
-          padding: '6px 16px', background: '#dc3545', color: '#fff',
-          border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600',
-        }}>
-          ✕ Close
-        </button>
+        <button onClick={onClose} style={{ padding: '6px 16px', background: '#dc3545', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>✕ Close</button>
       </div>
       
-      {/* Status Bar */}
-      <div style={{
-        background: 'rgba(255,255,255,0.05)', padding: '8px 12px',
-        borderRadius: '6px', marginBottom: '12px', fontSize: '13px',
-        color: '#aaa', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap',
-      }}>
+      <div style={{ background: 'rgba(255,255,255,0.05)', padding: '8px 12px', borderRadius: '6px', marginBottom: '12px', fontSize: '13px', color: '#aaa', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' }}>
         <span>Phase: {gs.deepTactics?.phase || 'IDLE'}</span>
-        {isReferee && (
-          <>
-            <span>First Fan: {gs.deepTactics?.firstReviewFan?.name || 'Not assigned'}</span>
-            <span>Second Fan: {gs.deepTactics?.secondReviewFan?.name || 'Not assigned'}</span>
-          </>
-        )}
-        {isReviewFan && (
-          <span>Active Demonstrator: {gs.deepTactics?.activeDemonstrator?.name || 'Waiting...'}</span>
-        )}
-        {showDemoReady && <span style={{ color: '#4caf50' }}>✅ Demo Ready</span>}
+        {isReviewFan && <span>Active: {gs.deepTactics?.activeDemonstrator?.name || 'Waiting...'}</span>}
+        {isActiveDemonstrator && <span style={{ color: '#4caf50' }}>🟢 YOU ARE DEMONSTRATING</span>}
       </div>
       
-      {/* Referee Player Pool */}
-      {isReferee && (
-        <div style={DEEP_TACTICS_STYLES.playerPool}>
-          <input
-            type="text"
-            placeholder="🔍 Search players to place on pitch..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={DEEP_TACTICS_STYLES.searchBar}
-          />
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-            {filteredPlayers.map(player => (
-              <div
-                key={player.id}
-                onClick={() => handlePlayerSelect(player.id)}
-                style={{
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  background: selectedPlayer === player.id ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.05)',
-                  border: selectedPlayer === player.id ? '2px solid #FFD700' : '1px solid #333',
-                  fontSize: '11px',
-                  cursor: 'pointer',
-                  color: '#fff',
-                }}
-              >
-                {player.name} ({player.position})
-              </div>
-            ))}
-          </div>
-          {selectedPlayer && (
-            <div style={{ 
-              fontSize: '11px', color: '#FFD700', marginTop: '4px',
-              padding: '4px 8px', background: 'rgba(255,215,0,0.1)', borderRadius: '4px',
-            }}>
-              ℹ️ Tap an empty spot on the pitch to place {filteredPlayers.find(p => p.id === selectedPlayer)?.name}
-            </div>
-          )}
-        </div>
-      )}
-      
-      {/* Control Toolbar (active demonstrator only) */}
       {canInteract && !isReferee && (
         <div style={DEEP_TACTICS_STYLES.controlToolbar}>
-          <button onClick={() => handleToolClick('SET_BALL')} style={{
-            ...DEEP_TACTICS_STYLES.toolButton,
-            background: selectedTool === 'SET_BALL' ? '#FFD700' : '#222',
-            color: selectedTool === 'SET_BALL' ? '#000' : '#fff',
-          }}>💥 Ball</button>
+          <button onClick={() => handleToolClick('SET_BALL')} style={{ ...DEEP_TACTICS_STYLES.toolButton, background: selectedTool === 'SET_BALL' ? '#FFD700' : '#222', color: selectedTool === 'SET_BALL' ? '#000' : '#fff' }}>💥 Ball</button>
           <button onClick={() => handleToolClick('ADD_STEP_RIGHT')} style={DEEP_TACTICS_STYLES.toolButton}>➡️ Forward-R</button>
           <button onClick={() => handleToolClick('ADD_STEP_LEFT')} style={DEEP_TACTICS_STYLES.toolButton}>⬅️ Forward-L</button>
-          <button onClick={() => handleToolClick('PLAY_ANIMATION')} style={{
-            ...DEEP_TACTICS_STYLES.toolButton,
-            background: isAnimating ? '#4caf50' : '#222',
-          }}>🔶 {isAnimating ? 'Playing...' : 'Play'}</button>
-          <button onClick={() => handleToolClick('SELECT_SPOT')} style={{
-            ...DEEP_TACTICS_STYLES.toolButton,
-            background: selectedTool === 'SELECT_SPOT' ? '#FFD700' : '#222',
-            color: selectedTool === 'SELECT_SPOT' ? '#000' : '#fff',
-          }}>⭕ Select</button>
+          <button onClick={() => handleToolClick('PLAY_ANIMATION')} style={{ ...DEEP_TACTICS_STYLES.toolButton, background: isAnimating ? '#4caf50' : '#222' }}>🔶 {isAnimating ? 'Playing...' : 'Play'}</button>
+          <button onClick={() => handleToolClick('SELECT_SPOT')} style={{ ...DEEP_TACTICS_STYLES.toolButton, background: selectedTool === 'SELECT_SPOT' ? '#FFD700' : '#222', color: selectedTool === 'SELECT_SPOT' ? '#000' : '#fff' }}>⭕ Select</button>
           <button onClick={() => handleToolClick('CLEAR_ANIMATION')} style={DEEP_TACTICS_STYLES.toolButton}>🟧 Clear</button>
         </div>
       )}
       
-      {/* Pitch */}
       <div style={DEEP_TACTICS_STYLES.pitchContainer}>
         <div ref={pitchRef} style={DEEP_TACTICS_STYLES.pitchWrapper}>
           <PitchMarkings />
-          
-          {/* Team 1 (top half) */}
           {renderHalf('team1', slots1, team1Slots, gs.team1Name || 'Team 1', '#1565c0')}
-          
-          {/* Team 2 (bottom half) */}
           {renderHalf('team2', slots2, team2Slots, gs.team2Name || 'Team 2', '#b71c1c')}
-          
-          {/* Ball */}
-          <div style={{
-            position: 'absolute',
-            top: `${ballPos.y}%`,
-            left: `${ballPos.x}%`,
-            transform: 'translate(-50%, -50%)',
-            width: '16px',
-            height: '16px',
-            borderRadius: '50%',
-            background: 'radial-gradient(circle at 30% 30%, #fff, #ddd)',
-            boxShadow: '0 0 20px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.2)',
-            zIndex: 10,
-            pointerEvents: 'none',
-            border: '2px solid #555',
-          }}>
-            <div style={{
-              position: 'absolute', top: '50%', left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: '4px', height: '4px', borderRadius: '50%', background: '#222',
-            }} />
+          <div style={{ position: 'absolute', top: `${ballPos.y}%`, left: `${ballPos.x}%`, transform: 'translate(-50%, -50%)', width: '16px', height: '16px', borderRadius: '50%', background: 'radial-gradient(circle at 30% 30%, #fff, #ddd)', boxShadow: '0 0 20px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.2)', zIndex: 10, pointerEvents: 'none', border: '2px solid #555' }}>
+            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '4px', height: '4px', borderRadius: '50%', background: '#222' }} />
           </div>
         </div>
       </div>
       
-      {/* Review Fan Status */}
-      {isReviewFan && !isActiveDemonstrator && gs.deepTactics?.phase !== 'LIVE_DEMO' && (
-        <div style={{
-          textAlign: 'center', padding: '12px',
-          background: 'rgba(255,215,0,0.1)', borderRadius: '8px',
-          border: '1px solid #FFD700', marginTop: '8px',
-        }}>
-          <span style={{ fontSize: '16px', color: '#FFD700' }}>
-            {showDemoReady ? '🔓 Demo is ready! Waiting for your turn...' : '⏳ Waiting for the referee to start...'}
-          </span>
-          <div style={{ fontSize: '12px', color: '#aaa', marginTop: '4px' }}>
-            {gs.deepTactics?.activeDemonstrator?.name || 'No active demonstrator'}
-          </div>
+      {isReviewFan && !isActiveDemonstrator && gs.deepTactics?.phase === 'LIVE_DEMO' && (
+        <div style={{ textAlign: 'center', padding: '8px', background: 'rgba(255,215,0,0.1)', borderRadius: '8px', border: '1px solid #FFD700', marginTop: '8px' }}>
+          <span style={{ fontSize: '14px', color: '#FFD700' }}>⏳ {gs.deepTactics?.activeDemonstrator?.name || 'Another user'} is currently demonstrating. Please wait for your turn.</span>
         </div>
       )}
       
-      {isReviewFan && isActiveDemonstrator && (
-        <div style={{
-          textAlign: 'center', padding: '8px',
-          background: 'rgba(76,175,80,0.2)', borderRadius: '8px',
-          border: '1px solid #4caf50', marginTop: '8px',
-        }}>
-          <span style={{ fontSize: '14px', color: '#4caf50' }}>
-            🟢 You are demonstrating! Drag spots and use the toolbar.
-          </span>
+      {isActiveDemonstrator && (
+        <div style={{ textAlign: 'center', padding: '8px', background: 'rgba(76,175,80,0.2)', borderRadius: '8px', border: '1px solid #4caf50', marginTop: '8px' }}>
+          <span style={{ fontSize: '14px', color: '#4caf50' }}>🟢 You are demonstrating! Drag spots and use the toolbar.</span>
         </div>
       )}
     </div>
