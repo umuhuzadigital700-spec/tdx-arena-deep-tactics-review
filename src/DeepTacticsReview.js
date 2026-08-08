@@ -1,5 +1,5 @@
 // src/DeepTacticsReview.js - Full Interactive Pitch for Reviewers (FINAL)
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const DEEP_TACTICS_STYLES = {
   overlay: {
@@ -141,8 +141,9 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
   const [selectedTool, setSelectedTool] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [animationStep, setAnimationStep] = useState(null);
+  const [hasControl, setHasControl] = useState(false);
   const pitchRef = useRef(null);
-  
+
   useEffect(() => {
     if (!socket) return;
     const handleStateUpdate = (data) => {
@@ -155,31 +156,37 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
       setAnimationStep(stepData);
       setTimeout(() => setAnimationStep(null), 500);
     };
+    const handleDemonstrationControl = ({ hasControl: control }) => {
+      setHasControl(control);
+    };
     socket.on('deepTacticsState', handleStateUpdate);
     socket.on('animationStep', handleAnimationStep);
+    socket.on('demonstrationControl', handleDemonstrationControl);
     return () => {
       socket.off('deepTacticsState', handleStateUpdate);
       socket.off('animationStep', handleAnimationStep);
+      socket.off('demonstrationControl', handleDemonstrationControl);
     };
   }, [socket]);
-  
+
   const formation1 = gs.team1Formation || '4-4-2';
   const formation2 = gs.team2Formation || '4-4-2';
   const slots1 = FORMATION_SLOTS_DTR[formation1] || FORMATION_SLOTS_DTR['4-4-2'];
   const slots2 = FORMATION_SLOTS_DTR[formation2] || FORMATION_SLOTS_DTR['4-4-2'];
-  
+
   const team1Slots = pitchState.team1Slots || [];
   const team2Slots = pitchState.team2Slots || [];
   const ballPos = pitchState.ballPosition || { x: 50, y: 50 };
   const selectedSpots = pitchState.selectedSpots || [];
   const isAnimating = pitchState.isAnimating || false;
-  
+
   const isActiveDemonstrator = isReviewFan && 
     reviewRole === 'first' && 
-    gs.deepTactics?.activeDemonstrator?.txId === user?.txId;
-  
-  const canInteract = isReferee || isActiveDemonstrator;
-  
+    gs.deepTactics?.activeDemonstrator?.txId === user?.txId &&
+    hasControl;
+
+  const canInteract = isActiveDemonstrator;
+
   const handleToolClick = (tool) => {
     if (!canInteract) return;
     if (selectedTool === tool) { setSelectedTool(null); return; }
@@ -189,21 +196,21 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
       setSelectedTool(null);
     }
   };
-  
+
   const handleBallPlacement = (half, index) => {
     if (!canInteract) return;
     if (selectedTool !== 'SET_BALL') return;
     socket.emit('demoBallAction', { action: 'SET_BALL', spotIndex: index, half });
     setSelectedTool(null);
   };
-  
+
   const handleDragStart = (e, half, index) => {
-    if (!isActiveDemonstrator) return;
+    if (!canInteract) return;
     setIsDragging(true);
   };
-  
+
   const handleDragEnd = (e, half, index) => {
-    if (!isActiveDemonstrator || !isDragging) return;
+    if (!canInteract || !isDragging) return;
     setIsDragging(false);
     const rect = pitchRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -211,7 +218,7 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
     const y = ((e.clientY - rect.top) / rect.height) * 100;
     socket.emit('demoMovePlayer', { half, slotIndex: index, newX: x, newY: y });
   };
-  
+
   const renderHalf = (half, slotDefs, teamSlots, teamName, teamColor) => {
     const isTopHalf = half === 'team1';
     return (
@@ -224,7 +231,7 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
           const isSelected = selectedSpots.includes(`${half}-${idx}`);
           const isAnimatingHighlight = animationStep?.highlightSlot === idx && animationStep?.half === half;
           const isEmpty = !player;
-          
+
           return (
             <div
               key={`${half}-${idx}`}
@@ -237,7 +244,7 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
                         isAnimatingHighlight ? '3px solid #4caf50' :
                         player ? '2px solid #fff' : '2px solid rgba(255,255,255,0.2)',
                 boxShadow: isSelected ? '0 0 20px rgba(255,215,0,0.3)' : 'none',
-                cursor: isActiveDemonstrator ? 'grab' : 'default',
+                cursor: canInteract ? 'grab' : 'default',
               }}
               onClick={() => {
                 if (selectedTool === 'SET_BALL' && canInteract) {
@@ -258,7 +265,7 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
       </div>
     );
   };
-  
+
   return (
     <div style={DEEP_TACTICS_STYLES.overlay}>
       <div style={DEEP_TACTICS_STYLES.header}>
@@ -270,14 +277,14 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
         </div>
         <button onClick={onClose} style={{ padding: '6px 16px', background: '#dc3545', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>✕ Close</button>
       </div>
-      
+
       <div style={{ background: 'rgba(255,255,255,0.05)', padding: '8px 12px', borderRadius: '6px', marginBottom: '12px', fontSize: '13px', color: '#aaa', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' }}>
         <span>Phase: {gs.deepTactics?.phase || 'IDLE'}</span>
         {isReviewFan && <span>Active: {gs.deepTactics?.activeDemonstrator?.name || 'Waiting...'}</span>}
-        {isActiveDemonstrator && <span style={{ color: '#4caf50' }}>🟢 YOU ARE DEMONSTRATING</span>}
+        {canInteract && <span style={{ color: '#4caf50' }}>🟢 YOU ARE DEMONSTRATING</span>}
       </div>
-      
-      {canInteract && !isReferee && (
+
+      {canInteract && (
         <div style={DEEP_TACTICS_STYLES.controlToolbar}>
           <button onClick={() => handleToolClick('SET_BALL')} style={{ ...DEEP_TACTICS_STYLES.toolButton, background: selectedTool === 'SET_BALL' ? '#FFD700' : '#222', color: selectedTool === 'SET_BALL' ? '#000' : '#fff' }}>💥 Ball</button>
           <button onClick={() => handleToolClick('ADD_STEP_RIGHT')} style={DEEP_TACTICS_STYLES.toolButton}>➡️ Forward-R</button>
@@ -287,7 +294,7 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
           <button onClick={() => handleToolClick('CLEAR_ANIMATION')} style={DEEP_TACTICS_STYLES.toolButton}>🟧 Clear</button>
         </div>
       )}
-      
+
       <div style={DEEP_TACTICS_STYLES.pitchContainer}>
         <div ref={pitchRef} style={DEEP_TACTICS_STYLES.pitchWrapper}>
           <PitchMarkings />
@@ -298,14 +305,14 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
           </div>
         </div>
       </div>
-      
-      {isReviewFan && !isActiveDemonstrator && gs.deepTactics?.phase === 'LIVE_DEMO' && (
+
+      {isReviewFan && !canInteract && gs.deepTactics?.phase === 'LIVE_DEMO' && (
         <div style={{ textAlign: 'center', padding: '8px', background: 'rgba(255,215,0,0.1)', borderRadius: '8px', border: '1px solid #FFD700', marginTop: '8px' }}>
           <span style={{ fontSize: '14px', color: '#FFD700' }}>⏳ {gs.deepTactics?.activeDemonstrator?.name || 'Another user'} is currently demonstrating. Please wait for your turn.</span>
         </div>
       )}
-      
-      {isActiveDemonstrator && (
+
+      {canInteract && (
         <div style={{ textAlign: 'center', padding: '8px', background: 'rgba(76,175,80,0.2)', borderRadius: '8px', border: '1px solid #4caf50', marginTop: '8px' }}>
           <span style={{ fontSize: '14px', color: '#4caf50' }}>🟢 You are demonstrating! Drag spots and use the toolbar.</span>
         </div>
