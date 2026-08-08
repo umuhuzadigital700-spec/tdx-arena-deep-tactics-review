@@ -1,4 +1,4 @@
-// src/RefereeDashboard.js - FINAL WORKING VERSION
+// src/RefereeDashboard.js - COMPLETE REWRITE
 import React, { useState, useEffect, useCallback } from 'react';
 
 const STYLES = {
@@ -15,7 +15,7 @@ const STYLES = {
 
 const FORMATIONS = ['4-4-2', '4-3-3', '3-5-2', '4-5-1', '5-3-2', '4-2-3-1'];
 
-const FORMATION_SLOTS = {
+const SLOTS = {
   '4-4-2': [
     { label: 'ST1', top: 10, left: 35 }, { label: 'ST2', top: 10, left: 65 },
     { label: 'LM', top: 30, left: 15 }, { label: 'CM1', top: 30, left: 35 }, { label: 'CM2', top: 30, left: 65 }, { label: 'RM', top: 30, left: 85 },
@@ -52,76 +52,27 @@ const FORMATION_SLOTS = {
     { label: 'DM1', top: 35, left: 35 }, { label: 'DM2', top: 35, left: 65 },
     { label: 'LB', top: 55, left: 15 }, { label: 'CB1', top: 55, left: 35 }, { label: 'CB2', top: 55, left: 65 }, { label: 'RB', top: 55, left: 85 },
     { label: 'GK', top: 85, left: 50 },
-  ]
+  ],
 };
 
 function LivePitchView({ formation, slots, title, color }) {
-  const slotDefs = FORMATION_SLOTS[formation] || FORMATION_SLOTS['4-4-2'];
-  const isFlipped = title.includes('Team 2');
-  
+  const defs = SLOTS[formation] || SLOTS['4-4-2'];
+  const flipped = title.includes('Team 2');
   return (
-    <div style={{ flex: 1, minWidth: '200px', background: '#111', border: '1px solid #333', padding: 10, borderRadius: 8 }}>
-      <div style={{ fontSize: 'clamp(11px, 1vw, 13px)', fontWeight: 'bold', color, marginBottom: 6, textTransform: 'uppercase' }}>{title}</div>
-      <div style={{ 
-        position: 'relative', 
-        width: '100%', 
-        paddingTop: '130%', 
-        background: 'linear-gradient(180deg, #1b4d22 0%, #0f3014 100%)', 
-        border: '1px solid #444', 
-        borderRadius: 6, 
-        overflow: 'hidden' 
-      }}>
-        <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 1, background: 'rgba(255,255,255,0.15)' }} />
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 40, height: 40, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)' }} />
-        
-        {slotDefs.map((s, idx) => {
-          const player = slots && slots[idx] ? slots[idx] : null;
-          const displayName = player && player.name ? player.name : s.label;
-          const topPos = isFlipped ? (100 - s.top) : s.top;
-          const hasPlayer = player && player.name;
-          
+    <div style={{ flex: 1, minWidth: '180px', background: '#111', border: '1px solid #333', padding: 8, borderRadius: 6 }}>
+      <div style={{ fontSize: 'clamp(10px, 0.9vw, 12px)', fontWeight: 'bold', color, marginBottom: 4, textTransform: 'uppercase' }}>{title}</div>
+      <div style={{ position: 'relative', width: '100%', paddingTop: '130%', background: 'linear-gradient(180deg, #1b4d22 0%, #0f3014 100%)', border: '1px solid #444', borderRadius: 4, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 1, background: 'rgba(255,255,255,0.1)' }} />
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 30, height: 30, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)' }} />
+        {defs.map((s, i) => {
+          const p = slots && slots[i] ? slots[i] : null;
+          const has = p && p.name && p.name.trim() !== '';
+          const disp = has ? p.name : s.label;
+          const top = flipped ? (100 - s.top) : s.top;
           return (
-            <div 
-              key={idx} 
-              style={{ 
-                position: 'absolute', 
-                top: `${topPos}%`, 
-                left: `${s.left}%`, 
-                transform: 'translate(-50%, -50%)', 
-                textAlign: 'center',
-              }}
-            >
-              <div style={{ 
-                width: 'clamp(28px, 3vw, 36px)', 
-                height: 'clamp(28px, 3vw, 36px)', 
-                borderRadius: '50%', 
-                background: hasPlayer ? color : 'rgba(255,255,255,0.08)', 
-                border: hasPlayer ? '2px solid #fff' : '1px solid rgba(255,255,255,0.2)',
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                fontSize: 'clamp(5px, 0.6vw, 7px)', 
-                fontWeight: 'bold', 
-                color: '#fff', 
-                padding: '2px', 
-                boxSizing: 'border-box', 
-                overflow: 'hidden', 
-                wordBreak: 'break-word',
-                transition: 'all 0.2s ease',
-              }}>
-                <span style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '100%',
-                  height: '100%',
-                  fontSize: hasPlayer ? 'clamp(6px, 0.7vw, 8px)' : 'clamp(5px, 0.5vw, 6px)',
-                  lineHeight: '1.1',
-                  textAlign: 'center',
-                  wordBreak: 'break-word',
-                }}>
-                  {displayName}
-                </span>
+            <div key={i} style={{ position: 'absolute', top: `${top}%`, left: `${s.left}%`, transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+              <div style={{ width: 'clamp(24px, 2.5vw, 32px)', height: 'clamp(24px, 2.5vw, 32px)', borderRadius: '50%', background: has ? color : 'rgba(255,255,255,0.06)', border: has ? '2px solid #fff' : '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'clamp(5px, 0.5vw, 6px)', fontWeight: 'bold', color: '#fff', padding: '1px', overflow: 'hidden', wordBreak: 'break-word' }}>
+                <span style={{ fontSize: has ? 'clamp(5px, 0.5vw, 7px)' : 'clamp(4px, 0.4vw, 5px)', lineHeight: 1.1, textAlign: 'center', wordBreak: 'break-word' }}>{disp}</span>
               </div>
             </div>
           );
@@ -131,81 +82,26 @@ function LivePitchView({ formation, slots, title, color }) {
   );
 }
 
-function RefereePitchView({ formation, slots, title, color, onSpotClick, selectedPlayer, isReferee }) {
-  const slotDefs = FORMATION_SLOTS[formation] || FORMATION_SLOTS['4-4-2'];
-  
+function RefereePitchView({ formation, slots, title, color, onSpotClick, selectedPlayer }) {
+  const defs = SLOTS[formation] || SLOTS['4-4-2'];
   return (
-    <div style={{ flex: 1, minWidth: '240px', background: '#111', border: '1px solid #333', padding: 12, borderRadius: 8 }}>
-      <div style={{ fontSize: 13, fontWeight: 'bold', color, marginBottom: 8, textTransform: 'uppercase' }}>{title} ({formation})</div>
-      <div style={{ 
-        position: 'relative', 
-        width: '100%', 
-        paddingTop: '130%', 
-        background: 'linear-gradient(180deg, #1b4d22 0%, #0f3014 100%)', 
-        border: '1px solid #444', 
-        borderRadius: 6, 
-        overflow: 'hidden' 
-      }}>
-        <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 1, background: 'rgba(255,255,255,0.15)' }} />
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 50, height: 50, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)' }} />
-        
-        {slotDefs.map((s, idx) => {
-          const card = slots && slots[idx] ? slots[idx] : null;
-          const isEmpty = !card || !card.name;
-          const isSelected = selectedPlayer !== null && isEmpty;
-          const displayName = card && card.name ? card.name : s.label;
-          
+    <div style={{ flex: 1, minWidth: '200px', background: '#111', border: '1px solid #333', padding: 10, borderRadius: 6 }}>
+      <div style={{ fontSize: 'clamp(11px, 0.9vw, 13px)', fontWeight: 'bold', color, marginBottom: 4, textTransform: 'uppercase' }}>{title} ({formation})</div>
+      <div style={{ position: 'relative', width: '100%', paddingTop: '130%', background: 'linear-gradient(180deg, #1b4d22 0%, #0f3014 100%)', border: '1px solid #444', borderRadius: 4, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 1, background: 'rgba(255,255,255,0.1)' }} />
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 30, height: 30, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)' }} />
+        {defs.map((s, i) => {
+          const p = slots && slots[i] ? slots[i] : null;
+          const has = p && p.name && p.name.trim() !== '';
+          const disp = has ? p.name : s.label;
+          const empty = !has;
+          const canPlace = selectedPlayer !== null && empty;
           return (
-            <div 
-              key={idx} 
-              onClick={() => {
-                if (isReferee && isSelected && onSpotClick) {
-                  onSpotClick(idx);
-                }
-              }}
-              style={{ 
-                position: 'absolute', 
-                top: `${s.top}%`, 
-                left: `${s.left}%`, 
-                transform: 'translate(-50%, -50%)', 
-                textAlign: 'center',
-                cursor: isReferee && isSelected ? 'pointer' : 'default',
-              }}
-            >
-              <div style={{ 
-                width: 36, 
-                height: 36, 
-                borderRadius: '50%', 
-                background: card && card.name ? color : 'rgba(255,255,255,0.08)', 
-                border: isSelected ? '2px dashed #FFD700' : (card && card.name ? '2px solid #fff' : '1px solid rgba(255,255,255,0.2)'),
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                fontSize: 7, 
-                fontWeight: 'bold', 
-                color: '#fff', 
-                padding: 2, 
-                boxSizing: 'border-box', 
-                overflow: 'hidden', 
-                wordBreak: 'break-word',
-                transition: 'all 0.2s ease',
-                boxShadow: isSelected ? '0 0 20px rgba(255,215,0,0.3)' : 'none',
-              }}>
-                <span style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '100%',
-                  height: '100%',
-                  fontSize: card && card.name ? '7px' : '6px',
-                  lineHeight: '1.1',
-                  textAlign: 'center',
-                  wordBreak: 'break-word',
-                }}>
-                  {displayName}
-                </span>
+            <div key={i} onClick={() => { if (canPlace && onSpotClick) onSpotClick(i); }} style={{ position: 'absolute', top: `${s.top}%`, left: `${s.left}%`, transform: 'translate(-50%, -50%)', textAlign: 'center', cursor: canPlace ? 'pointer' : 'default' }}>
+              <div style={{ width: 'clamp(28px, 3vw, 36px)', height: 'clamp(28px, 3vw, 36px)', borderRadius: '50%', background: has ? color : 'rgba(255,255,255,0.06)', border: canPlace ? '2px dashed #FFD700' : has ? '2px solid #fff' : '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'clamp(5px, 0.5vw, 7px)', fontWeight: 'bold', color: '#fff', padding: '1px', overflow: 'hidden', wordBreak: 'break-word', boxShadow: canPlace ? '0 0 15px rgba(255,215,0,0.2)' : 'none' }}>
+                <span style={{ fontSize: has ? 'clamp(6px, 0.6vw, 8px)' : 'clamp(5px, 0.5vw, 6px)', lineHeight: 1.1, textAlign: 'center', wordBreak: 'break-word' }}>{disp}</span>
               </div>
-              {isSelected && <div style={{ fontSize: 5, color: '#FFD700', marginTop: 2 }}>PLACE</div>}
+              {canPlace && <div style={{ fontSize: 4, color: '#FFD700', marginTop: 1 }}>PLACE</div>}
             </div>
           );
         })}
@@ -218,356 +114,151 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
   const gs = gameState || propGs || {};
   const [fanSearch, setFanSearch] = useState('');
   const [selectedPlayer, setSelectedPlayer] = useState(null);
-  const [livePitchState, setLivePitchState] = useState({});
+  const [livePitch, setLivePitch] = useState({});
 
-  const viewersList = Array.isArray(gs.allViewers) ? gs.allViewers : [];
-  const team1Players = gs.team1Picks || [];
-  const team2Players = gs.team2Picks || [];
-  const team1Slots = gs.deepTactics?.pitchState?.team1Slots || [];
-  const team2Slots = gs.deepTactics?.pitchState?.team2Slots || [];
+  const viewers = Array.isArray(gs.allViewers) ? gs.allViewers : [];
+  const t1Players = gs.team1Picks || [];
+  const t2Players = gs.team2Picks || [];
+  const t1Slots = gs.deepTactics?.pitchState?.team1Slots || [];
+  const t2Slots = gs.deepTactics?.pitchState?.team2Slots || [];
 
   useEffect(() => {
-    if (gs?.deepTactics?.pitchState) {
-      setLivePitchState(gs.deepTactics.pitchState);
-    }
+    if (gs?.deepTactics?.pitchState) setLivePitch(gs.deepTactics.pitchState);
   }, [gs]);
 
-  const handleFormationChange = (team, formation) => {
-    socket.emit('refSetFormation', { team, formation });
-  };
-
-  const handleSpotClick = (half, slotIndex) => {
+  const handleFormation = (team, f) => socket.emit('refSetFormation', { team, formation: f });
+  const handleSpot = (half, idx) => {
     if (!selectedPlayer) return;
-    const halfSlots = half === 'team1' ? team1Slots : team2Slots;
-    if (halfSlots[slotIndex] && halfSlots[slotIndex].name) return;
-    socket.emit('refPlacePlayerOnPitch', { half, slotIndex, playerId: selectedPlayer });
+    const slots = half === 'team1' ? t1Slots : t2Slots;
+    if (slots[idx] && slots[idx].name) return;
+    socket.emit('refPlacePlayerOnPitch', { half, slotIndex: idx, playerId: selectedPlayer });
     setSelectedPlayer(null);
   };
-
-  const handleAssignReviewFan = (viewerId, role) => {
-    socket.emit('refAssignReviewFanById', { userId: viewerId, role });
-  };
-
-  const handleRemoveReviewFan = (viewerId) => {
-    socket.emit('refRemoveReviewFan', { userId: viewerId });
-  };
-
-  const handleClearAllReviewers = () => {
-    if (window.confirm('Remove ALL assigned reviewers?')) {
-      socket.emit('refClearAllReviewers');
-    }
-  };
-
-  const handleStartDemonstration = (role) => {
-    socket.emit('refStartDemonstration', { role });
-  };
+  const handleAssign = (id, role) => socket.emit('refAssignReviewFanById', { userId: id, role });
+  const handleRemove = (id) => socket.emit('refRemoveReviewFan', { userId: id });
+  const handleClearAll = () => { if (window.confirm('Remove ALL reviewers?')) socket.emit('refClearAllReviewers'); };
+  const handleStartDemo = (role) => socket.emit('refStartDemonstration', { role });
 
   if (!isReferee) return null;
-
-  const liveFormation1 = gs.team1Formation || '4-4-2';
-  const liveFormation2 = gs.team2Formation || '4-4-2';
 
   return (
     <div style={STYLES.container}>
       <div style={STYLES.mainHeader}>
         <span>🧠 Deep Tactics Review — Control Tower</span>
-        <span style={{ fontSize: '0.85rem', background: '#333', padding: '4px 10px', borderRadius: 12, color: '#00f2fe' }}>
-          Phase: {gs.deepTactics?.phase || 'IDLE'}
-        </span>
+        <span style={{ fontSize: '0.85rem', background: '#333', padding: '4px 10px', borderRadius: 12, color: '#00f2fe' }}>Phase: {gs.deepTactics?.phase || 'IDLE'}</span>
       </div>
 
       <div style={STYLES.panel}>
-        <h3 style={STYLES.header}>👥 Player Pool & Formation Controls</h3>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-          <div style={{ flex: 1, minWidth: '200px', background: '#111', padding: 10, borderRadius: 6 }}>
+        <h3 style={STYLES.header}>👥 Player Pool & Formation</h3>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: '180px', background: '#111', padding: 8, borderRadius: 6 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: '#00f2fe', fontSize: '0.85rem', fontWeight: 'bold' }}>🔵 {gs.team1Name || 'Team 1'} ({team1Players.length})</span>
-              <select
-                value={gs.team1Formation || '4-4-2'}
-                onChange={(e) => handleFormationChange('team1', e.target.value)}
-                style={{ ...STYLES.input, width: 'auto', padding: '2px 6px', fontSize: '0.7rem' }}
-              >
+              <span style={{ color: '#00f2fe', fontSize: '0.8rem', fontWeight: 'bold' }}>🔵 {gs.team1Name || 'Team 1'} ({t1Players.length})</span>
+              <select value={gs.team1Formation || '4-4-2'} onChange={(e) => handleFormation('team1', e.target.value)} style={{ ...STYLES.input, width: 'auto', padding: '2px 6px', fontSize: '0.7rem' }}>
                 {FORMATIONS.map(f => <option key={f} value={f}>{f}</option>)}
               </select>
             </div>
-            <div style={{ marginTop: 8, maxHeight: 120, overflowY: 'auto', display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-              {team1Players.map(p => (
-                <div
-                  key={p.id}
-                  onClick={() => setSelectedPlayer(selectedPlayer === p.id ? null : p.id)}
-                  style={{
-                    padding: '4px 8px',
-                    borderRadius: 4,
-                    background: selectedPlayer === p.id ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.05)',
-                    border: selectedPlayer === p.id ? '2px solid #FFD700' : '1px solid #333',
-                    fontSize: '10px',
-                    cursor: 'pointer',
-                    color: '#fff',
-                  }}
-                >
+            <div style={{ marginTop: 6, maxHeight: 100, overflowY: 'auto', display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+              {t1Players.map(p => (
+                <div key={p.id} onClick={() => setSelectedPlayer(selectedPlayer === p.id ? null : p.id)} style={{ padding: '3px 6px', borderRadius: 3, background: selectedPlayer === p.id ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.05)', border: selectedPlayer === p.id ? '1px solid #FFD700' : '1px solid #333', fontSize: '9px', cursor: 'pointer', color: '#fff' }}>
                   {p.name} ({p.position})
                 </div>
               ))}
             </div>
           </div>
-          <div style={{ flex: 1, minWidth: '200px', background: '#111', padding: 10, borderRadius: 6 }}>
+          <div style={{ flex: 1, minWidth: '180px', background: '#111', padding: 8, borderRadius: 6 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: '#ff5252', fontSize: '0.85rem', fontWeight: 'bold' }}>🔴 {gs.team2Name || 'Team 2'} ({team2Players.length})</span>
-              <select
-                value={gs.team2Formation || '4-4-2'}
-                onChange={(e) => handleFormationChange('team2', e.target.value)}
-                style={{ ...STYLES.input, width: 'auto', padding: '2px 6px', fontSize: '0.7rem' }}
-              >
+              <span style={{ color: '#ff5252', fontSize: '0.8rem', fontWeight: 'bold' }}>🔴 {gs.team2Name || 'Team 2'} ({t2Players.length})</span>
+              <select value={gs.team2Formation || '4-4-2'} onChange={(e) => handleFormation('team2', e.target.value)} style={{ ...STYLES.input, width: 'auto', padding: '2px 6px', fontSize: '0.7rem' }}>
                 {FORMATIONS.map(f => <option key={f} value={f}>{f}</option>)}
               </select>
             </div>
-            <div style={{ marginTop: 8, maxHeight: 120, overflowY: 'auto', display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-              {team2Players.map(p => (
-                <div
-                  key={p.id}
-                  onClick={() => setSelectedPlayer(selectedPlayer === p.id ? null : p.id)}
-                  style={{
-                    padding: '4px 8px',
-                    borderRadius: 4,
-                    background: selectedPlayer === p.id ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.05)',
-                    border: selectedPlayer === p.id ? '2px solid #FFD700' : '1px solid #333',
-                    fontSize: '10px',
-                    cursor: 'pointer',
-                    color: '#fff',
-                  }}
-                >
+            <div style={{ marginTop: 6, maxHeight: 100, overflowY: 'auto', display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+              {t2Players.map(p => (
+                <div key={p.id} onClick={() => setSelectedPlayer(selectedPlayer === p.id ? null : p.id)} style={{ padding: '3px 6px', borderRadius: 3, background: selectedPlayer === p.id ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.05)', border: selectedPlayer === p.id ? '1px solid #FFD700' : '1px solid #333', fontSize: '9px', cursor: 'pointer', color: '#fff' }}>
                   {p.name} ({p.position})
                 </div>
               ))}
             </div>
           </div>
         </div>
-        {selectedPlayer && (
-          <div style={{ fontSize: 12, color: '#FFD700', marginTop: 8, padding: '4px 8px', background: 'rgba(255,215,0,0.1)', borderRadius: 4 }}>
-            ✅ Selected: {[...team1Players, ...team2Players].find(p => p.id === selectedPlayer)?.name} — Tap an empty spot on the pitch to place
-          </div>
-        )}
+        {selectedPlayer && <div style={{ fontSize: 11, color: '#FFD700', marginTop: 6, padding: '4px 8px', background: 'rgba(255,215,0,0.1)', borderRadius: 4 }}>✅ Selected: {[...t1Players, ...t2Players].find(p => p.id === selectedPlayer)?.name} — Tap empty spot</div>}
       </div>
 
       <div style={STYLES.panel}>
-        <h3 style={STYLES.header}>⚽ Setup Pitch — Place players on empty spots</h3>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-          <RefereePitchView
-            formation={gs.team1Formation || '4-4-2'}
-            slots={team1Slots}
-            title={gs.team1Name || "Team 1"}
-            color="#1565c0"
-            onSpotClick={(idx) => handleSpotClick('team1', idx)}
-            selectedPlayer={selectedPlayer}
-            isReferee={true}
-          />
-          <RefereePitchView
-            formation={gs.team2Formation || '4-4-2'}
-            slots={team2Slots}
-            title={gs.team2Name || "Team 2"}
-            color="#b71c1c"
-            onSpotClick={(idx) => handleSpotClick('team2', idx)}
-            selectedPlayer={selectedPlayer}
-            isReferee={true}
-          />
+        <h3 style={STYLES.header}>⚽ Setup Pitch</h3>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <RefereePitchView formation={gs.team1Formation || '4-4-2'} slots={t1Slots} title={gs.team1Name || 'Team 1'} color="#1565c0" onSpotClick={(i) => handleSpot('team1', i)} selectedPlayer={selectedPlayer} />
+          <RefereePitchView formation={gs.team2Formation || '4-4-2'} slots={t2Slots} title={gs.team2Name || 'Team 2'} color="#b71c1c" onSpotClick={(i) => handleSpot('team2', i)} selectedPlayer={selectedPlayer} />
         </div>
       </div>
 
       {gs.deepTactics?.phase === 'LIVE_DEMO' && (
         <div style={{ ...STYLES.panel, border: '2px solid #4caf50', background: '#0a1a0a' }}>
-          <h3 style={{ ...STYLES.header, color: '#4caf50' }}>
-            🔴 LIVE DEMONSTRATION — {gs.deepTactics?.activeDemonstrator?.name || 'Reviewer'}
-          </h3>
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-            <LivePitchView
-              formation={liveFormation1}
-              slots={livePitchState.team1Slots || []}
-              title={`${gs.team1Name || 'Team 1'} (${liveFormation1})`}
-              color="#1565c0"
-            />
-            <LivePitchView
-              formation={liveFormation2}
-              slots={livePitchState.team2Slots || []}
-              title={`${gs.team2Name || 'Team 2'} (${liveFormation2})`}
-              color="#b71c1c"
-            />
+          <h3 style={{ ...STYLES.header, color: '#4caf50' }}>🔴 LIVE DEMONSTRATION — {gs.deepTactics?.activeDemonstrator?.name || 'Reviewer'}</h3>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <LivePitchView formation={gs.team1Formation || '4-4-2'} slots={livePitch.team1Slots || []} title={`${gs.team1Name || 'Team 1'} (Live)`} color="#1565c0" />
+            <LivePitchView formation={gs.team2Formation || '4-4-2'} slots={livePitch.team2Slots || []} title={`${gs.team2Name || 'Team 2'} (Live)`} color="#b71c1c" />
           </div>
-          <div style={{ fontSize: '0.8rem', color: '#aaa', marginTop: 8, display: 'flex', justifyContent: 'space-between' }}>
-            <span>🔴 Active Demonstrator: {gs.deepTactics?.activeDemonstrator?.name || 'None'}</span>
-            <span>Ball Position: ({Math.round(livePitchState.ballPosition?.x || 50)}%, {Math.round(livePitchState.ballPosition?.y || 50)}%)</span>
+          <div style={{ fontSize: '0.75rem', color: '#aaa', marginTop: 6, display: 'flex', justifyContent: 'space-between' }}>
+            <span>Active: {gs.deepTactics?.activeDemonstrator?.name || 'None'}</span>
+            <span>Ball: ({Math.round(livePitch.ballPosition?.x || 50)}%, {Math.round(livePitch.ballPosition?.y || 50)}%)</span>
           </div>
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
         <div>
           <div style={STYLES.panel}>
             <h3 style={STYLES.header}>⚡ Controls</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <button
-                onClick={() => {
-                  if (window.confirm('Start Deep Tactics Review?')) {
-                    socket.emit('refInitDeepTactics');
-                  }
-                }}
-                style={STYLES.buttonGold}
-              >
-                🧠 Start Deep Tactics Review
-              </button>
-              <button
-                onClick={() => socket.emit('refOpenDemonstration')}
-                style={{
-                  ...STYLES.button,
-                  background: gs.deepTactics?.pitchState?.showDemo ? '#28a745' : '#2c2c54',
-                  width: '100%',
-                }}
-              >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <button onClick={() => { if (window.confirm('Start Deep Tactics Review?')) socket.emit('refInitDeepTactics'); }} style={STYLES.buttonGold}>🧠 Start Deep Tactics Review</button>
+              <button onClick={() => socket.emit('refOpenDemonstration')} style={{ ...STYLES.button, background: gs.deepTactics?.pitchState?.showDemo ? '#28a745' : '#2c2c54', width: '100%' }}>
                 {gs.deepTactics?.pitchState?.showDemo ? '🔓 Demo Open' : '🔒 Open Demonstration'}
               </button>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  onClick={() => handleStartDemonstration('first')}
-                  style={{
-                    ...STYLES.button,
-                    flex: 1,
-                    background: gs.deepTactics?.activeDemonstrator?.txId === gs.deepTactics?.firstReviewFan?.txId ? '#28a745' : '#2c2c54',
-                  }}
-                >
-                  ▶️ First Review
-                </button>
-                <button
-                  onClick={() => handleStartDemonstration('second')}
-                  style={{
-                    ...STYLES.button,
-                    flex: 1,
-                    background: gs.deepTactics?.activeDemonstrator?.txId === gs.deepTactics?.secondReviewFan?.txId ? '#28a745' : '#2c2c54',
-                  }}
-                >
-                  ▶️ Second Review
-                </button>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button onClick={() => handleStartDemo('first')} style={{ ...STYLES.button, flex: 1, background: gs.deepTactics?.activeDemonstrator?.txId === gs.deepTactics?.firstReviewFan?.txId ? '#28a745' : '#2c2c54' }}>▶️ First</button>
+                <button onClick={() => handleStartDemo('second')} style={{ ...STYLES.button, flex: 1, background: gs.deepTactics?.activeDemonstrator?.txId === gs.deepTactics?.secondReviewFan?.txId ? '#28a745' : '#2c2c54' }}>▶️ Second</button>
               </div>
-              <button
-                onClick={() => socket.emit('refStopDemonstration')}
-                style={{ ...STYLES.buttonDanger, width: '100%' }}
-              >
-                ⏹️ Stop Demonstration
-              </button>
-              <button
-                onClick={() => socket.emit('refNextReview')}
-                style={{ ...STYLES.button, width: '100%' }}
-              >
-                ➡️ Next Review
-              </button>
-              <button
-                onClick={handleClearAllReviewers}
-                style={{ ...STYLES.buttonDanger, width: '100%' }}
-              >
-                🗑️ Clear All Reviewers
-              </button>
+              <button onClick={() => socket.emit('refStopDemonstration')} style={{ ...STYLES.buttonDanger, width: '100%' }}>⏹️ Stop</button>
+              <button onClick={() => socket.emit('refNextReview')} style={{ ...STYLES.button, width: '100%' }}>➡️ Next Review</button>
+              <button onClick={handleClearAll} style={{ ...STYLES.buttonDanger, width: '100%' }}>🗑️ Clear All Reviewers</button>
             </div>
-            <div style={{ marginTop: 12, borderTop: '1px solid #333', paddingTop: 12 }}>
+            <div style={{ marginTop: 10, borderTop: '1px solid #333', paddingTop: 10 }}>
               <div style={STYLES.metaText}>Status:</div>
-              <div style={{ fontSize: '0.8rem', color: '#aaa' }}>Active: {gs.deepTactics?.activeDemonstrator?.name || 'None'}</div>
-              <div style={{ fontSize: '0.8rem', color: '#aaa' }}>First Fan: {gs.deepTactics?.firstReviewFan?.name || 'Not assigned'}</div>
-              <div style={{ fontSize: '0.8rem', color: '#aaa' }}>Second Fan: {gs.deepTactics?.secondReviewFan?.name || 'Not assigned'}</div>
+              <div style={{ fontSize: '0.75rem', color: '#aaa' }}>Active: {gs.deepTactics?.activeDemonstrator?.name || 'None'}</div>
+              <div style={{ fontSize: '0.75rem', color: '#aaa' }}>First: {gs.deepTactics?.firstReviewFan?.name || 'Not assigned'}</div>
+              <div style={{ fontSize: '0.75rem', color: '#aaa' }}>Second: {gs.deepTactics?.secondReviewFan?.name || 'Not assigned'}</div>
             </div>
           </div>
         </div>
 
         <div style={STYLES.panel}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h3 style={{ ...STYLES.header, marginBottom: 0 }}>👥 Connected Fans ({viewersList.length})</h3>
-            <input
-              type="text"
-              placeholder="Search..."
-              value={fanSearch}
-              onChange={e => setFanSearch(e.target.value)}
-              style={{ ...STYLES.input, width: '180px', padding: '4px 8px', fontSize: '0.8rem' }}
-            />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <h3 style={{ ...STYLES.header, marginBottom: 0 }}>👥 Fans ({viewers.length})</h3>
+            <input type="text" placeholder="Search..." value={fanSearch} onChange={e => setFanSearch(e.target.value)} style={{ ...STYLES.input, width: '140px', padding: '3px 6px', fontSize: '0.7rem' }} />
           </div>
-          <div style={{ maxHeight: '400px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {viewersList
-              .filter(v => !fanSearch || v.name?.toLowerCase().includes(fanSearch.toLowerCase()))
-              .map((v) => {
-                const isFirst = gs.deepTactics?.firstReviewFan?.id === v.id;
-                const isSecond = gs.deepTactics?.secondReviewFan?.id === v.id;
-                const isActive = gs.deepTactics?.activeDemonstrator?.id === v.id;
-                return (
-                  <div
-                    key={v.id}
-                    style={{
-                      background: isActive ? 'rgba(76,175,80,0.2)' : isFirst || isSecond ? 'rgba(255,215,0,0.1)' : '#111',
-                      padding: '8px 12px',
-                      borderRadius: 4,
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      border: isActive ? '1px solid #4caf50' : isFirst || isSecond ? '1px solid #FFD700' : '1px solid #222',
-                    }}
-                  >
-                    <div>
-                      <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
-                        {v.name || 'Anonymous Fan'}
-                        {isActive && ' 🟢'}
-                        {isFirst && ' 🔵'}
-                        {isSecond && ' 🔴'}
-                      </span>
-                      <span style={{ fontSize: '0.75rem', marginLeft: '8px', color: v.isVIP ? '#ffc107' : '#888' }}>
-                        {v.isVIP ? '⭐ VIP' : 'Fan'}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                      {!isFirst && !isSecond ? (
-                        <>
-                          <button
-                            onClick={() => handleAssignReviewFan(v.id, 'first')}
-                            style={{
-                              padding: '2px 6px',
-                              fontSize: '0.6rem',
-                              background: '#1565c0',
-                              border: 'none',
-                              color: '#fff',
-                              borderRadius: 2,
-                              cursor: 'pointer',
-                            }}
-                          >
-                            Set First
-                          </button>
-                          <button
-                            onClick={() => handleAssignReviewFan(v.id, 'second')}
-                            style={{
-                              padding: '2px 6px',
-                              fontSize: '0.6rem',
-                              background: '#b71c1c',
-                              border: 'none',
-                              color: '#fff',
-                              borderRadius: 2,
-                              cursor: 'pointer',
-                            }}
-                          >
-                            Set Second
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          onClick={() => handleRemoveReviewFan(v.id)}
-                          style={{
-                            padding: '2px 6px',
-                            fontSize: '0.6rem',
-                            background: '#dc3545',
-                            border: 'none',
-                            color: '#fff',
-                            borderRadius: 2,
-                            cursor: 'pointer',
-                          }}
-                        >
-                          Remove
-                        </button>
-                      )}
-                    </div>
+          <div style={{ maxHeight: '300px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {viewers.filter(v => !fanSearch || v.name?.toLowerCase().includes(fanSearch.toLowerCase())).map(v => {
+              const isFirst = gs.deepTactics?.firstReviewFan?.id === v.id;
+              const isSecond = gs.deepTactics?.secondReviewFan?.id === v.id;
+              const isActive = gs.deepTactics?.activeDemonstrator?.id === v.id;
+              return (
+                <div key={v.id} style={{ background: isActive ? 'rgba(76,175,80,0.2)' : isFirst || isSecond ? 'rgba(255,215,0,0.1)' : '#111', padding: '5px 8px', borderRadius: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: isActive ? '1px solid #4caf50' : isFirst || isSecond ? '1px solid #FFD700' : '1px solid #222' }}>
+                  <div><span style={{ fontWeight: 'bold', fontSize: '0.8rem' }}>{v.name || 'Anonymous'}{isActive && ' 🟢'}{isFirst && ' 🔵'}{isSecond && ' 🔴'}</span><span style={{ fontSize: '0.6rem', marginLeft: '4px', color: v.isVIP ? '#ffc107' : '#888' }}>{v.isVIP ? '⭐ VIP' : 'Fan'}</span></div>
+                  <div style={{ display: 'flex', gap: '3px' }}>
+                    {!isFirst && !isSecond ? (
+                      <>
+                        <button onClick={() => handleAssign(v.id, 'first')} style={{ padding: '1px 4px', fontSize: '0.55rem', background: '#1565c0', border: 'none', color: '#fff', borderRadius: 2, cursor: 'pointer' }}>1st</button>
+                        <button onClick={() => handleAssign(v.id, 'second')} style={{ padding: '1px 4px', fontSize: '0.55rem', background: '#b71c1c', border: 'none', color: '#fff', borderRadius: 2, cursor: 'pointer' }}>2nd</button>
+                      </>
+                    ) : (
+                      <button onClick={() => handleRemove(v.id)} style={{ padding: '1px 4px', fontSize: '0.55rem', background: '#dc3545', border: 'none', color: '#fff', borderRadius: 2, cursor: 'pointer' }}>✕</button>
+                    )}
                   </div>
-                );
-              })}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
