@@ -1,4 +1,4 @@
-// src/App.js - TDX Arena Deep Tactics Review (COMPLETE FIXED)
+// src/App.js — COMPLETE REWRITE
 import React, { useEffect, useState } from 'react';
 import io from 'socket.io-client';
 import RefereeDashboard from './RefereeDashboard';
@@ -115,7 +115,7 @@ function LoginScreen({ onLogin }) {
               <label style={{ color: '#aaa', fontSize: 'clamp(11px, 1.2vw, 12px)', display: 'block', marginBottom: 5 }}>Referee Token</label>
               <input type="password" value={refToken} onChange={e => setRefToken(e.target.value)} placeholder="Enter referee password" style={inputStyle} autoFocus />
             </div>
-            <button type="submit" disabled={refLoading} style={{ width: '100%', padding: '13px 0', background: refLoading ? '#555' : '#1976d2', color: 'white', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 'clamp(14px, 1.8vw, 16px)', cursor: refLoading ? 'not-allowed' : 'pointer', touchAction: 'manipulation' }}>{refLoading ? '⏳ Checking...' : '🔑 Login as Referee'}</button>
+            <button type="submit" disabled={refLoading} style={{ width: '100%', padding: '13px 0', background: refLoading ? '#555' : '#1976d2', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 'clamp(14px, 1.8vw, 16px)', cursor: refLoading ? 'not-allowed' : 'pointer', touchAction: 'manipulation' }}>{refLoading ? '⏳ Checking...' : '🔑 Login as Referee'}</button>
             <div onClick={() => setRefMode(false)} style={{ textAlign: 'center', marginTop: 12, color: '#555', fontSize: 12, cursor: 'pointer' }}>← Back</div>
           </form>
         )}
@@ -152,10 +152,6 @@ export default function App() {
         setGs(prev => ({
           ...prev,
           deepTactics: data.deepTactics,
-          team1Formation: data.team1Formation || prev?.team1Formation || '4-4-2',
-          team2Formation: data.team2Formation || prev?.team2Formation || '4-4-2',
-          team1Picks: data.team1Picks || prev?.team1Picks || [],
-          team2Picks: data.team2Picks || prev?.team2Picks || [],
         }));
       }
     });
