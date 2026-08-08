@@ -1,4 +1,4 @@
-// src/RefereeDashboard.js - COMPLETE FIXED VERSION
+// src/RefereeDashboard.js — COMPLETE REWRITE
 import React, { useState, useEffect } from 'react';
 
 const STYLES = {
@@ -308,7 +308,7 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
         </div>
       </div>
 
-      {/* ── LIVE DEMONSTRATION VIEW (EXACTLY what reviewer sees) ── */}
+      {/* ── LIVE DEMONSTRATION VIEW ── */}
       {gs.deepTactics?.phase === 'LIVE_DEMO' && (
         <div style={{ ...STYLES.panel, border: '2px solid #4caf50', background: '#0a1a0a' }}>
           <h3 style={{ ...STYLES.header, color: '#4caf50' }}>
