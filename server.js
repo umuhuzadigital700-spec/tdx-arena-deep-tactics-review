@@ -34,7 +34,7 @@ function freshGameState() {
       firstReviewFan: null,
       secondReviewFan: null,
       activeDemonstrator: null,
-      phase: 'IDLE',
+      phase: 'IDLE', // IDLE → ASSIGNING → SETUP → DEMONSTRATION_READY → LIVE_DEMO
       pitchState: {
         team1Slots: new Array(11).fill(null),
         team2Slots: new Array(11).fill(null),
@@ -140,10 +140,7 @@ function parseCSV(text) {
 setInterval(async () => {
   const loaded = await loadPickedPlayers();
   if (loaded) {
-    state.deepTactics.pitchState.team1Slots = state.team1Picks.slice(0, 11);
-    while (state.deepTactics.pitchState.team1Slots.length < 11) state.deepTactics.pitchState.team1Slots.push(null);
-    state.deepTactics.pitchState.team2Slots = state.team2Picks.slice(0, 11);
-    while (state.deepTactics.pitchState.team2Slots.length < 11) state.deepTactics.pitchState.team2Slots.push(null);
+    // Only update available pools, NOT the pitch slots
     broadcast();
   }
 }, 60000);
@@ -288,15 +285,14 @@ io.on('connection', (socket) => {
   socket.on('refInitDeepTactics', () => {
     state.deepTactics.active = true;
     state.deepTactics.phase = 'ASSIGNING';
-    state.deepTactics.pitchState = {
-      team1Slots: new Array(11).fill(null),
-      team2Slots: new Array(11).fill(null),
-      ballPosition: { x: 50, y: 50 },
-      selectedSpots: [],
-      animationQueue: [],
-      isAnimating: false,
-      showDemo: false,
-    };
+    // Ensure all slots are EMPTY
+    state.deepTactics.pitchState.team1Slots = new Array(11).fill(null);
+    state.deepTactics.pitchState.team2Slots = new Array(11).fill(null);
+    state.deepTactics.pitchState.ballPosition = { x: 50, y: 50 };
+    state.deepTactics.pitchState.selectedSpots = [];
+    state.deepTactics.pitchState.animationQueue = [];
+    state.deepTactics.pitchState.isAnimating = false;
+    state.deepTactics.pitchState.showDemo = false;
     broadcast();
     io.emit('deepTacticsState', state.deepTactics);
   });
@@ -361,15 +357,21 @@ io.on('connection', (socket) => {
     state.deepTactics.phase = 'LIVE_DEMO';
     broadcast();
     io.emit('deepTacticsState', state.deepTactics);
+    // Notify the specific fan that they have control
+    io.to(fan.id).emit('demonstrationControl', { hasControl: true });
   });
 
   socket.on('refStopDemonstration', () => {
     if (!state.deepTactics.active) return;
+    const oldDemonstrator = state.deepTactics.activeDemonstrator;
     state.deepTactics.activeDemonstrator = null;
     state.deepTactics.phase = 'DEMONSTRATION_READY';
     state.deepTactics.pitchState.selectedSpots = [];
     state.deepTactics.pitchState.animationQueue = [];
     state.deepTactics.pitchState.isAnimating = false;
+    if (oldDemonstrator) {
+      io.to(oldDemonstrator.id).emit('demonstrationControl', { hasControl: false });
+    }
     broadcast();
     io.emit('deepTacticsState', state.deepTactics);
   });
@@ -379,10 +381,16 @@ io.on('connection', (socket) => {
     const current = state.deepTactics.activeDemonstrator;
     const nextFan = state.deepTactics.secondReviewFan;
     if (nextFan && (!current || String(current.txId) !== String(nextFan.txId))) {
+      // Release current
+      if (current) {
+        io.to(current.id).emit('demonstrationControl', { hasControl: false });
+      }
       state.deepTactics.activeDemonstrator = nextFan;
       state.deepTactics.pitchState.selectedSpots = [];
       state.deepTactics.pitchState.animationQueue = [];
       state.deepTactics.pitchState.isAnimating = false;
+      // Give control to next
+      io.to(nextFan.id).emit('demonstrationControl', { hasControl: true });
       broadcast();
       io.emit('deepTacticsState', state.deepTactics);
       io.emit('reviewHandoff', { newDemonstrator: nextFan.name });
