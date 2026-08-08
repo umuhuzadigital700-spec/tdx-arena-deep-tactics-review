@@ -1,4 +1,4 @@
-// src/App.js - TDX Arena Deep Tactics Review
+// src/App.js - TDX Arena Deep Tactics Review (FINAL)
 import React, { useEffect, useState, useCallback } from 'react';
 import io from 'socket.io-client';
 import RefereeDashboard from './RefereeDashboard';
@@ -19,7 +19,6 @@ const socket = io(BACKEND_URL, {
 
 // ── WARNING MESSAGE ──
 const WARNING_TEXT = `Iki gikoresho ni urubuga rwo gusesengura takitike (Deep Tactics Review). Gukoresha uyu mukino wemera ko wujuje amategeko yose yavuzwe.`;
-
 const LOGIN_INSTRUCTION = `KWINIURA: ANDIKA TDX-ID YAWE`;
 
 const inputStyle = {
@@ -48,7 +47,6 @@ function LoginScreen({ onLogin }) {
     e.preventDefault();
     if (!name.trim() || !txId.trim()) { setError('Please enter your name and TDX-ID.'); return; }
     if (txId.trim().length !== 11) { setError('TDX-ID must be exactly 11 digits.'); return; }
-    
     setLoading(true);
     setError('');
     try {
@@ -279,7 +277,6 @@ export default function App() {
     socket.on('refConfirm', (ok) => { if (ok) setRefOk(true); });
     socket.on('loginError', (err) => alert(err.message || 'Login Error'));
     
-    // ── DEEP TACTICS STATE LISTENER ──
     socket.on('deepTacticsState', (data) => {
       console.log('🧠 Deep Tactics state updated:', data);
       if (data && data.deepTactics) {
@@ -287,36 +284,28 @@ export default function App() {
           const newState = { 
             ...prev, 
             deepTactics: data.deepTactics,
-            // Preserve team formations and picks
             team1Formation: data.team1Formation || prev?.team1Formation || '4-4-2',
             team2Formation: data.team2Formation || prev?.team2Formation || '4-4-2',
             team1Picks: data.team1Picks || prev?.team1Picks || [],
             team2Picks: data.team2Picks || prev?.team2Picks || [],
           };
-          console.log('🔄 Updated state:', newState);
           return newState;
         });
       }
     });
 
-    // ── FORMATION UPDATED LISTENER ──
     socket.on('formationUpdated', ({ team, formation }) => {
       console.log(`📐 Formation updated: ${team} → ${formation}`);
       setGs(prev => {
         const newState = { ...prev };
-        if (team === 'team1') {
-          newState.team1Formation = formation;
-        } else if (team === 'team2') {
-          newState.team2Formation = formation;
-        }
+        if (team === 'team1') newState.team1Formation = formation;
+        else if (team === 'team2') newState.team2Formation = formation;
         return newState;
       });
     });
 
-    // ── REVIEW HANDOFF LISTENER ──
     socket.on('reviewHandoff', ({ newDemonstrator }) => {
       console.log(`🔄 Review handed off to: ${newDemonstrator}`);
-      // You could add a notification here
     });
 
     return () => {
@@ -363,6 +352,15 @@ export default function App() {
   }
 
   // ── FAN VIEW ──
+  // The fan always sees the DeepTacticsReview overlay when:
+  // 1. They are a review fan (first or second)
+  // 2. The demonstration is open or live
+  const isReviewFan = gs?.deepTactics?.firstReviewFan?.txId === user?.txId ||
+                      gs?.deepTactics?.secondReviewFan?.txId === user?.txId;
+  const reviewRole = gs?.deepTactics?.firstReviewFan?.txId === user?.txId ? 'first' :
+                     gs?.deepTactics?.secondReviewFan?.txId === user?.txId ? 'second' : null;
+  const shouldShowOverlay = isReviewFan && (gs?.deepTactics?.pitchState?.showDemo || gs?.deepTactics?.phase === 'LIVE_DEMO');
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -388,30 +386,7 @@ export default function App() {
         </div>
       </div>
 
-      <div style={{
-        background: 'rgba(255,215,0,0.1)',
-        border: '1px solid rgba(255,215,0,0.3)',
-        borderRadius: 10,
-        padding: '20px',
-        textAlign: 'center',
-        marginBottom: 16,
-      }}>
-        <div style={{ fontSize: 18, fontWeight: 700, color: '#FFD700' }}>
-          🧠 Deep Tactics Review
-        </div>
-        <div style={{ fontSize: 13, color: '#aaa', marginTop: 8 }}>
-          {gs?.deepTactics?.phase === 'LIVE_DEMO' ? '🔴 Live Demonstration in Progress' : 'Waiting for the referee to start...'}
-        </div>
-        <div style={{ fontSize: 12, color: '#888', marginTop: 8 }}>
-          Phase: {gs?.deepTactics?.phase || 'IDLE'}
-          {gs?.deepTactics?.activeDemonstrator?.name && (
-            <span> — Active: {gs.deepTactics.activeDemonstrator.name}</span>
-          )}
-        </div>
-      </div>
-
-      {/* ── DEEP TACTICS REVIEW OVERLAY FOR FANS ── */}
-      {showDeepTactics && (
+      {shouldShowOverlay ? (
         <DeepTacticsReview
           gameState={gs}
           socket={socket}
@@ -421,13 +396,31 @@ export default function App() {
             window._toggleDeepTactics = null;
           }}
           isReferee={false}
-          isReviewFan={gs?.deepTactics?.firstReviewFan?.txId === user?.txId ||
-            gs?.deepTactics?.secondReviewFan?.txId === user?.txId}
-          reviewRole={
-            gs?.deepTactics?.firstReviewFan?.txId === user?.txId ? 'first' :
-              gs?.deepTactics?.secondReviewFan?.txId === user?.txId ? 'second' : null
-          }
+          isReviewFan={true}
+          reviewRole={reviewRole}
         />
+      ) : (
+        <div style={{
+          background: 'rgba(255,215,0,0.1)',
+          border: '1px solid rgba(255,215,0,0.3)',
+          borderRadius: 10,
+          padding: '40px 20px',
+          textAlign: 'center',
+        }}>
+          <div style={{ fontSize: 32, marginBottom: 16 }}>⏳</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: '#FFD700' }}>
+            Waiting for the Referee
+          </div>
+          <div style={{ fontSize: 14, color: '#aaa', marginTop: 8 }}>
+            The demonstration has not started yet. Please wait for the referee to open the demonstration.
+          </div>
+          <div style={{ fontSize: 12, color: '#555', marginTop: 12 }}>
+            Phase: {gs?.deepTactics?.phase || 'IDLE'}
+            {gs?.deepTactics?.activeDemonstrator?.name && (
+              <span> — Active: {gs.deepTactics.activeDemonstrator.name}</span>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
