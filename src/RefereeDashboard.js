@@ -49,14 +49,16 @@ const FORMATION_SLOTS = {
   ]
 };
 
-// ── LIVE PITCH VIEW (EXACTLY what reviewer sees) ──
+// ── LIVE PITCH VIEW (EXACTLY what reviewer sees, with correct orientation) ──
+// Replace the existing LivePitchView function with this:
+
 function LivePitchView({ formation, slots, title, color }) {
   const slotDefs = FORMATION_SLOTS[formation] || FORMATION_SLOTS['4-4-2'];
   const isFlipped = title.includes('Team 2');
   
   return (
-    <div style={{ flex: 1, minWidth: '240px', background: '#111', border: '1px solid #333', padding: 12, borderRadius: 8 }}>
-      <div style={{ fontSize: 13, fontWeight: 'bold', color, marginBottom: 8, textTransform: 'uppercase' }}>{title}</div>
+    <div style={{ flex: 1, minWidth: '200px', background: '#111', border: '1px solid #333', padding: 10, borderRadius: 8 }}>
+      <div style={{ fontSize: 'clamp(11px, 1vw, 13px)', fontWeight: 'bold', color, marginBottom: 6, textTransform: 'uppercase' }}>{title}</div>
       <div style={{ 
         position: 'relative', 
         width: '100%', 
@@ -67,37 +69,39 @@ function LivePitchView({ formation, slots, title, color }) {
         overflow: 'hidden' 
       }}>
         <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 1, background: 'rgba(255,255,255,0.15)' }} />
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 50, height: 50, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)' }} />
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 40, height: 40, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)' }} />
         
         {slotDefs.map((s, idx) => {
           const player = slots && slots[idx];
           const isEmpty = !player;
           const displayName = player ? player.name : s.label;
+          // ── For Team 2, flip the position vertically ──
+          const topPos = isFlipped ? (100 - s.top) : s.top;
           
           return (
             <div 
               key={idx} 
               style={{ 
                 position: 'absolute', 
-                top: `${s.top}%`, 
+                top: `${topPos}%`, 
                 left: `${s.left}%`, 
                 transform: 'translate(-50%, -50%)', 
                 textAlign: 'center',
               }}
             >
               <div style={{ 
-                width: 36, 
-                height: 36, 
+                width: 'clamp(28px, 3vw, 36px)', 
+                height: 'clamp(28px, 3vw, 36px)', 
                 borderRadius: '50%', 
                 background: player ? color : 'rgba(255,255,255,0.08)', 
                 border: player ? '2px solid #fff' : '1px solid rgba(255,255,255,0.2)',
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center', 
-                fontSize: 7, 
+                fontSize: 'clamp(5px, 0.6vw, 7px)', 
                 fontWeight: 'bold', 
                 color: '#fff', 
-                padding: 2, 
+                padding: '2px', 
                 boxSizing: 'border-box', 
                 overflow: 'hidden', 
                 wordBreak: 'break-word',
@@ -109,7 +113,7 @@ function LivePitchView({ formation, slots, title, color }) {
                   justifyContent: 'center',
                   width: '100%',
                   height: '100%',
-                  fontSize: player ? '7px' : '6px',
+                  fontSize: player ? 'clamp(6px, 0.7vw, 8px)' : 'clamp(5px, 0.5vw, 6px)',
                   lineHeight: '1.1',
                   textAlign: 'center',
                   wordBreak: 'break-word',
@@ -124,7 +128,6 @@ function LivePitchView({ formation, slots, title, color }) {
     </div>
   );
 }
-
 // ── REFEREE PITCH VIEW (for placing players) ──
 function RefereePitchView({ formation, slots, title, color, onSpotClick, selectedPlayer, isReferee }) {
   const slotDefs = FORMATION_SLOTS[formation] || FORMATION_SLOTS['4-4-2'];
