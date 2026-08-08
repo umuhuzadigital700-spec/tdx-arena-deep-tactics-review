@@ -1,4 +1,4 @@
-// src/DeepTacticsReview.js - Full Interactive Demonstration Pitch (FIXED ORIENTATION)
+// src/DeepTacticsReview.js - Full Interactive Demonstration Pitch (FULLY WORKING)
 import React, { useState, useEffect, useRef } from 'react';
 
 const DEEP_TACTICS_STYLES = {
@@ -130,15 +130,12 @@ const DEEP_TACTICS_STYLES = {
   },
 };
 
-// ── CORRECT FORMATION SLOTS (Strikers at center line, GK at goal line) ──
-// These are defined with top% where 0% is the top of the half (center line side)
-// and 100% is the bottom of the half (goal line side)
 const FORMATION_SLOTS_DTR = {
   '4-4-2': [
-    { label: 'ST1', top: 10, left: 35 }, { label: 'ST2', top: 10, left: 65 },  // Strikers at top (center line)
+    { label: 'ST1', top: 10, left: 35 }, { label: 'ST2', top: 10, left: 65 },
     { label: 'LM', top: 30, left: 15 }, { label: 'CM1', top: 30, left: 35 }, { label: 'CM2', top: 30, left: 65 }, { label: 'RM', top: 30, left: 85 },
     { label: 'LB', top: 55, left: 15 }, { label: 'CB1', top: 55, left: 35 }, { label: 'CB2', top: 55, left: 65 }, { label: 'RB', top: 55, left: 85 },
-    { label: 'GK', top: 85, left: 50 },  // Goalkeeper at bottom (goal line)
+    { label: 'GK', top: 85, left: 50 },
   ],
   '4-3-3': [
     { label: 'LW', top: 8, left: 15 }, { label: 'ST', top: 8, left: 50 }, { label: 'RW', top: 8, left: 85 },
@@ -176,19 +173,12 @@ const FORMATION_SLOTS_DTR = {
 function PitchMarkings() {
   return (
     <>
-      {/* Center circle */}
       <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'clamp(50px, 8vw, 80px)', height: 'clamp(50px, 8vw, 80px)', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.15)', pointerEvents: 'none', zIndex: 1 }} />
-      {/* Center line */}
       <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '2px', background: 'rgba(255,255,255,0.15)', pointerEvents: 'none', zIndex: 1 }} />
-      {/* Center dot */}
       <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(255,255,255,0.3)', pointerEvents: 'none', zIndex: 1 }} />
-      {/* Team 1 penalty area (top) */}
       <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: '18%', border: '2px solid rgba(255,255,255,0.15)', borderTop: 'none', pointerEvents: 'none', zIndex: 1 }} />
-      {/* Team 2 penalty area (bottom) */}
       <div style={{ position: 'absolute', bottom: 0, left: '20%', right: '20%', height: '18%', border: '2px solid rgba(255,255,255,0.15)', borderBottom: 'none', pointerEvents: 'none', zIndex: 1 }} />
-      {/* Team 1 goal box */}
       <div style={{ position: 'absolute', top: 0, left: '35%', right: '35%', height: '8%', border: '2px solid rgba(255,255,255,0.1)', borderTop: 'none', pointerEvents: 'none', zIndex: 1 }} />
-      {/* Team 2 goal box */}
       <div style={{ position: 'absolute', bottom: 0, left: '35%', right: '35%', height: '8%', border: '2px solid rgba(255,255,255,0.1)', borderBottom: 'none', pointerEvents: 'none', zIndex: 1 }} />
     </>
   );
@@ -206,7 +196,6 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
   const pitchRef = useRef(null);
   const dragDataRef = useRef(null);
 
-  // ── SOCKET LISTENERS ──
   useEffect(() => {
     if (!socket) return;
 
@@ -244,7 +233,6 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
     };
   }, [socket, isReviewFan]);
 
-  // ── CHECK IF THIS USER IS THE ACTIVE DEMONSTRATOR ──
   useEffect(() => {
     const isActive = isReviewFan && 
       gs.deepTactics?.activeDemonstrator?.txId === user?.txId &&
@@ -253,7 +241,6 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
     setShowToolbar(isActive);
   }, [gs.deepTactics?.activeDemonstrator, user, hasControl, isReviewFan]);
 
-  // ── GET FORMATION SLOTS ──
   const formation1 = gs.team1Formation || '4-4-2';
   const formation2 = gs.team2Formation || '4-4-2';
   const slots1 = FORMATION_SLOTS_DTR[formation1] || FORMATION_SLOTS_DTR['4-4-2'];
@@ -267,7 +254,6 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
 
   const canInteract = isActiveDemonstrator;
 
-  // ── TOOL HANDLERS ──
   const handleToolClick = (tool) => {
     if (!canInteract) return;
     if (selectedTool === tool) {
@@ -301,7 +287,6 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
     socket.emit('demoSelectSpot', { half, slotIndex: index, action });
   };
 
-  // ── DRAG HANDLERS (Supports both mouse and touch) ──
   const handleDragStart = (e, half, index) => {
     if (!canInteract) return;
     e.preventDefault();
@@ -333,7 +318,6 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
     dragDataRef.current = null;
   };
 
-  // ── RENDER HALF ──
   const renderHalf = (half, slotDefs, teamSlots, teamName, teamColor, isTopHalf) => {
     return (
       <div style={{ 
@@ -360,10 +344,7 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
           const player = teamSlots[idx];
           const isSelected = selectedSpots.includes(`${half}-${idx}`);
           const isAnimatingHighlight = animationStep?.highlightSlot === idx && animationStep?.half === half;
-          const isEmpty = !player;
           const displayName = player ? player.name : slot.label;
-
-          // ── For Team 2 (bottom half), flip the position vertically ──
           const topPos = isTopHalf ? slot.top : (100 - slot.top);
 
           return (
@@ -420,7 +401,6 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
 
   return (
     <div style={DEEP_TACTICS_STYLES.overlay}>
-      {/* ── HEADER ── */}
       <div style={DEEP_TACTICS_STYLES.header}>
         <div>
           <span style={{ fontWeight: 800, fontSize: 'clamp(16px, 2.5vw, 22px)', color: '#FFD700' }}>⚽ Deep Tactics Review</span>
@@ -446,7 +426,6 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
         </button>
       </div>
 
-      {/* ── STATUS BAR ── */}
       <div style={{ 
         background: 'rgba(255,255,255,0.05)', 
         padding: '8px 12px', 
@@ -468,7 +447,6 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
         )}
       </div>
 
-      {/* ── CONTROL TOOLBAR ── */}
       {showToolbar && (
         <div style={DEEP_TACTICS_STYLES.controlToolbar}>
           <button 
@@ -510,7 +488,6 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
         </div>
       )}
 
-      {/* ── PITCH ── */}
       <div style={DEEP_TACTICS_STYLES.pitchContainer}>
         <div 
           ref={pitchRef} 
@@ -520,13 +497,9 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
         >
           <PitchMarkings />
           
-          {/* Team 1 (top half) - strikers at center, GK at goal */}
           {renderHalf('team1', slots1, team1Slots, gs.team1Name || 'Team 1', '#1565c0', true)}
-          
-          {/* Team 2 (bottom half) - strikers at center, GK at goal */}
           {renderHalf('team2', slots2, team2Slots, gs.team2Name || 'Team 2', '#b71c1c', false)}
           
-          {/* ── BALL (Fully visible, not transparent) ── */}
           <div style={{
             position: 'absolute',
             top: `${ballPos.y}%`,
