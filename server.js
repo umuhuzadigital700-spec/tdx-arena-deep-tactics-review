@@ -1,4 +1,4 @@
-// server.js — TDX Arena Deep Tactics Review Backend (FINAL)
+// server.js — TDX Arena Deep Tactics Review Backend (FINAL FIXED)
 const PLAYERS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTbZ1scBQnek93hKRTCjN74gBCWz7JV7hP2gw4Zkw58TI93kScE-r61IB6UDoUe4miKn1oH2tis7F7r/pub?gid=0&single=true&output=csv';
 const PAYMENT_VERIFY_URL = 'https://script.google.com/macros/s/AKfycby53O0rxnbNv3i7gLkxAZDmSVbjtAD6LEpEwE4nelF0sFNXXqInNFsvrZfnszPjbcGk/exec';
 const VIP_THRESHOLD = 2000;
@@ -34,7 +34,7 @@ function freshGameState() {
       firstReviewFan: null,
       secondReviewFan: null,
       activeDemonstrator: null,
-      phase: 'IDLE', // IDLE → ASSIGNING → SETUP → DEMONSTRATION_READY → LIVE_DEMO
+      phase: 'IDLE',
       pitchState: {
         team1Slots: new Array(11).fill(null),
         team2Slots: new Array(11).fill(null),
@@ -355,7 +355,6 @@ io.on('connection', (socket) => {
     state.deepTactics.phase = 'LIVE_DEMO';
     broadcast();
     io.emit('deepTacticsState', state.deepTactics);
-    // Send control to the active fan
     io.to(fan.id).emit('demonstrationControl', { hasControl: true });
   });
 
@@ -374,30 +373,20 @@ io.on('connection', (socket) => {
     io.emit('deepTacticsState', state.deepTactics);
   });
 
-  // ── FIXED: NEXT REVIEW - Immediate control transfer ──
   socket.on('refNextReview', () => {
     if (!state.deepTactics.active) return;
-    
     const current = state.deepTactics.activeDemonstrator;
     const nextFan = state.deepTactics.secondReviewFan;
-    
     if (nextFan && (!current || String(current.txId) !== String(nextFan.txId))) {
-      // ── Release current demonstrator ──
       if (current) {
         io.to(current.id).emit('demonstrationControl', { hasControl: false });
       }
-      
-      // ── Give FULL CONTROL to next fan immediately ──
       state.deepTactics.activeDemonstrator = nextFan;
       state.deepTactics.pitchState.selectedSpots = [];
       state.deepTactics.pitchState.animationQueue = [];
       state.deepTactics.pitchState.isAnimating = false;
       state.deepTactics.phase = 'LIVE_DEMO';
-      
-      // ── Send control signal to next fan ──
       io.to(nextFan.id).emit('demonstrationControl', { hasControl: true });
-      
-      // ── Broadcast state to ALL clients ──
       broadcast();
       io.emit('deepTacticsState', state.deepTactics);
       io.emit('reviewHandoff', { newDemonstrator: nextFan.name });
