@@ -3,7 +3,6 @@ import React, { useEffect, useState, useCallback } from 'react';
 import io from 'socket.io-client';
 import RefereeDashboard from './RefereeDashboard';
 import DeepTacticsReview from './DeepTacticsReview';
-import { imageCache, CachedImage } from './imageCache';
 
 const BACKEND_URL = window.location.origin;
 
@@ -17,7 +16,6 @@ const socket = io(BACKEND_URL, {
   upgrade: true,
 });
 
-// ── WARNING MESSAGE ──
 const WARNING_TEXT = `Iki gikoresho ni urubuga rwo gusesengura takitike (Deep Tactics Review). Gukoresha uyu mukino wemera ko wujuje amategeko yose yavuzwe.`;
 const LOGIN_INSTRUCTION = `KWINIURA: ANDIKA TDX-ID YAWE`;
 
@@ -33,7 +31,6 @@ const inputStyle = {
   boxSizing: 'border-box',
 };
 
-// ── Login Screen ──
 function LoginScreen({ onLogin }) {
   const [name, setName] = useState('');
   const [txId, setTxId] = useState('');
@@ -115,11 +112,8 @@ function LoginScreen({ onLogin }) {
             WebkitTextFillColor: 'transparent',
             letterSpacing: 2,
           }}>🧠 DEEP TACTICS</div>
-          <div style={{ color: '#aaa', fontSize: 13, letterSpacing: 2, textTransform: 'uppercase' }}>
-            Review Arena
-          </div>
+          <div style={{ color: '#aaa', fontSize: 13, letterSpacing: 2, textTransform: 'uppercase' }}>Review Arena</div>
         </div>
-
         <div style={{
           background: 'rgba(255,255,255,0.05)',
           border: '1px solid rgba(255,200,0,0.25)',
@@ -127,9 +121,7 @@ function LoginScreen({ onLogin }) {
           padding: '16px 18px',
           marginBottom: 20,
         }}>
-          <p style={{ color: '#ccc', fontSize: 12.5, lineHeight: 1.7, margin: 0 }}>
-            {WARNING_TEXT}
-          </p>
+          <p style={{ color: '#ccc', fontSize: 12.5, lineHeight: 1.7, margin: 0 }}>{WARNING_TEXT}</p>
           <div style={{
             background: '#FFD700',
             color: '#000',
@@ -138,109 +130,34 @@ function LoginScreen({ onLogin }) {
             fontWeight: 800,
             fontSize: 14.5,
             marginTop: 12,
-          }}>
-            {LOGIN_INSTRUCTION}
-          </div>
+          }}>{LOGIN_INSTRUCTION}</div>
         </div>
-
         {!refMode ? (
           <form onSubmit={handleFanLogin}>
             <div style={{ marginBottom: 12 }}>
-              <label style={{ color: '#aaa', fontSize: 12, display: 'block', marginBottom: 5 }}>
-                Amazina (Izina)
-              </label>
-              <input
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="Enter your full name"
-                maxLength={60}
-                style={inputStyle}
-              />
+              <label style={{ color: '#aaa', fontSize: 12, display: 'block', marginBottom: 5 }}>Amazina (Izina)</label>
+              <input value={name} onChange={e => setName(e.target.value)} placeholder="Enter your full name" maxLength={60} style={inputStyle} />
             </div>
             <div style={{ marginBottom: 16 }}>
-              <label style={{ color: '#aaa', fontSize: 12, display: 'block', marginBottom: 5 }}>
-                TDX-ID (11 digits)
-              </label>
-              <input
-                value={txId}
-                onChange={e => setTxId(e.target.value.replace(/\D/g, '').substring(0, 11))}
-                placeholder="00000000000"
-                inputMode="numeric"
-                maxLength={11}
-                style={{ ...inputStyle, letterSpacing: 4, fontWeight: 700, fontSize: 18 }}
-              />
+              <label style={{ color: '#aaa', fontSize: 12, display: 'block', marginBottom: 5 }}>TDX-ID (11 digits)</label>
+              <input value={txId} onChange={e => setTxId(e.target.value.replace(/\D/g, '').substring(0, 11))} placeholder="00000000000" inputMode="numeric" maxLength={11} style={{ ...inputStyle, letterSpacing: 4, fontWeight: 700, fontSize: 18 }} />
             </div>
-            {error && (
-              <div style={{
-                background: 'rgba(220,50,50,0.15)',
-                border: '1px solid rgba(220,50,50,0.4)',
-                borderRadius: 8,
-                padding: '10px 14px',
-                color: '#ff6b6b',
-                fontSize: 13,
-                marginBottom: 14,
-              }}>
-                ⚠️ {error}
-              </div>
-            )}
-            <button
-              type="submit"
-              disabled={loading || txId.length !== 11 || !name.trim()}
-              style={{
-                width: '100%',
-                padding: '14px 0',
-                background: loading ? '#555' : 'linear-gradient(135deg, #FFD700, #FFA500)',
-                color: '#000',
-                border: 'none',
-                borderRadius: 10,
-                fontWeight: 800,
-                fontSize: 15,
-                cursor: loading ? 'not-allowed' : 'pointer',
-              }}
-            >
+            {error && <div style={{ background: 'rgba(220,50,50,0.15)', border: '1px solid rgba(220,50,50,0.4)', borderRadius: 8, padding: '10px 14px', color: '#ff6b6b', fontSize: 13, marginBottom: 14 }}>⚠️ {error}</div>}
+            <button type="submit" disabled={loading || txId.length !== 11 || !name.trim()} style={{ width: '100%', padding: '14px 0', background: loading ? '#555' : 'linear-gradient(135deg, #FFD700, #FFA500)', color: '#000', border: 'none', borderRadius: 10, fontWeight: 800, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer' }}>
               {loading ? '⏳ Checking...' : '✅ LOGIN'}
             </button>
-            <div
-              onClick={() => setRefMode(true)}
-              style={{ textAlign: 'center', marginTop: 16, color: '#555', fontSize: 11, cursor: 'pointer' }}
-            >
-              · · ·
-            </div>
+            <div onClick={() => setRefMode(true)} style={{ textAlign: 'center', marginTop: 16, color: '#555', fontSize: 11, cursor: 'pointer' }}>· · ·</div>
           </form>
         ) : (
           <form onSubmit={handleRefLogin}>
             <div style={{ marginBottom: 12 }}>
-              <label style={{ color: '#aaa', fontSize: 12, display: 'block', marginBottom: 5 }}>
-                Referee Token
-              </label>
-              <input
-                type="password"
-                value={refToken}
-                onChange={e => setRefToken(e.target.value)}
-                placeholder="Enter referee password"
-                style={inputStyle}
-                autoFocus
-              />
+              <label style={{ color: '#aaa', fontSize: 12, display: 'block', marginBottom: 5 }}>Referee Token</label>
+              <input type="password" value={refToken} onChange={e => setRefToken(e.target.value)} placeholder="Enter referee password" style={inputStyle} autoFocus />
             </div>
-            <button
-              type="submit"
-              disabled={refLoading}
-              style={{
-                width: '100%', padding: '13px 0',
-                background: refLoading ? '#555' : '#1976d2', color: 'white',
-                border: 'none', borderRadius: 10,
-                fontWeight: 700, fontSize: 15,
-                cursor: refLoading ? 'not-allowed' : 'pointer',
-              }}
-            >
+            <button type="submit" disabled={refLoading} style={{ width: '100%', padding: '13px 0', background: refLoading ? '#555' : '#1976d2', color: 'white', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 15, cursor: refLoading ? 'not-allowed' : 'pointer' }}>
               {refLoading ? '⏳ Checking...' : '🔑 Login as Referee'}
             </button>
-            <div
-              onClick={() => setRefMode(false)}
-              style={{ textAlign: 'center', marginTop: 12, color: '#555', fontSize: 12, cursor: 'pointer' }}
-            >
-              ← Back
-            </div>
+            <div onClick={() => setRefMode(false)} style={{ textAlign: 'center', marginTop: 12, color: '#555', fontSize: 12, cursor: 'pointer' }}>← Back</div>
           </form>
         )}
       </div>
@@ -248,15 +165,13 @@ function LoginScreen({ onLogin }) {
   );
 }
 
-// ── Main App ──
 export default function App() {
   const [user, setUser] = useState(null);
   const [gs, setGs] = useState(null);
   const [refOk, setRefOk] = useState(false);
   const [connected, setConnected] = useState(false);
-  const [showDeepTactics, setShowDeepTactics] = useState(false);
+  const [showReviewOverlay, setShowReviewOverlay] = useState(false);
 
-  // ── HEARTBEAT ──
   useEffect(() => {
     const heartbeatInterval = setInterval(() => {
       if (socket && socket.connected && user?.txId) {
@@ -266,19 +181,14 @@ export default function App() {
     return () => clearInterval(heartbeatInterval);
   }, [socket, user]);
 
-  // ── SOCKET LISTENERS ──
   useEffect(() => {
     socket.on('connect', () => setConnected(true));
     socket.on('disconnect', () => setConnected(false));
-    socket.on('gameStateUpdate', (data) => {
-      console.log('📡 Game state updated:', data);
-      setGs(data);
-    });
+    socket.on('gameStateUpdate', (data) => { setGs(data); });
     socket.on('refConfirm', (ok) => { if (ok) setRefOk(true); });
     socket.on('loginError', (err) => alert(err.message || 'Login Error'));
     
     socket.on('deepTacticsState', (data) => {
-      console.log('🧠 Deep Tactics state updated:', data);
       if (data && data.deepTactics) {
         setGs(prev => {
           const newState = { 
@@ -295,7 +205,6 @@ export default function App() {
     });
 
     socket.on('formationUpdated', ({ team, formation }) => {
-      console.log(`📐 Formation updated: ${team} → ${formation}`);
       setGs(prev => {
         const newState = { ...prev };
         if (team === 'team1') newState.team1Formation = formation;
@@ -304,8 +213,9 @@ export default function App() {
       });
     });
 
-    socket.on('reviewHandoff', ({ newDemonstrator }) => {
-      console.log(`🔄 Review handed off to: ${newDemonstrator}`);
+    // ── Show/hide review overlay based on demonstration state ──
+    socket.on('demonstrationControl', ({ hasControl }) => {
+      setShowReviewOverlay(hasControl);
     });
 
     return () => {
@@ -316,31 +226,16 @@ export default function App() {
       socket.off('loginError');
       socket.off('deepTacticsState');
       socket.off('formationUpdated');
-      socket.off('reviewHandoff');
+      socket.off('demonstrationControl');
     };
   }, []);
 
-  // ── DEEP TACTICS OVERLAY TOGGLE ──
-  useEffect(() => {
-    window._toggleDeepTactics = (show) => {
-      setShowDeepTactics(show);
-    };
-    return () => {
-      window._toggleDeepTactics = null;
-    };
-  }, []);
+  window._toggleDeepTactics = (show) => {
+    setShowReviewOverlay(show);
+  };
 
   if (!connected) {
-    return (
-      <div style={{
-        minHeight: '100vh', background: '#0f0f1a',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: '#888', fontFamily: "'Segoe UI',sans-serif", flexDirection: 'column', gap: 12,
-      }}>
-        <div style={{ fontSize: 32 }}>⏳</div>
-        <div>Connecting to server...</div>
-      </div>
-    );
+    return <div style={{ minHeight: '100vh', background: '#0f0f1a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontFamily: "'Segoe UI', sans-serif", flexDirection: 'column', gap: 12 }}><div style={{ fontSize: 32 }}>⏳</div><div>Connecting to server...</div></div>;
   }
 
   if (!user) {
@@ -352,14 +247,12 @@ export default function App() {
   }
 
   // ── FAN VIEW ──
-  // The fan always sees the DeepTacticsReview overlay when:
-  // 1. They are a review fan (first or second)
-  // 2. The demonstration is open or live
   const isReviewFan = gs?.deepTactics?.firstReviewFan?.txId === user?.txId ||
                       gs?.deepTactics?.secondReviewFan?.txId === user?.txId;
   const reviewRole = gs?.deepTactics?.firstReviewFan?.txId === user?.txId ? 'first' :
                      gs?.deepTactics?.secondReviewFan?.txId === user?.txId ? 'second' : null;
-  const shouldShowOverlay = isReviewFan && (gs?.deepTactics?.pitchState?.showDemo || gs?.deepTactics?.phase === 'LIVE_DEMO');
+  const isActiveDemonstrator = isReviewFan && gs?.deepTactics?.activeDemonstrator?.txId === user?.txId;
+  const shouldShowOverlay = isActiveDemonstrator || showReviewOverlay;
 
   return (
     <div style={{
@@ -375,13 +268,7 @@ export default function App() {
           <span style={{ color: '#aaa', fontSize: 12, marginLeft: 8 }}>Review</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {user.isVIP && (
-            <span style={{
-              background: 'linear-gradient(135deg,#FFD700,#FFA500)',
-              color: '#000', fontSize: 11, fontWeight: 800,
-              padding: '3px 10px', borderRadius: 20,
-            }}>⭐ VIP</span>
-          )}
+          {user.isVIP && <span style={{ background: 'linear-gradient(135deg,#FFD700,#FFA500)', color: '#000', fontSize: 11, fontWeight: 800, padding: '3px 10px', borderRadius: 20 }}>⭐ VIP</span>}
           <span style={{ color: '#888', fontSize: 12 }}>{user.name}</span>
         </div>
       </div>
@@ -391,12 +278,9 @@ export default function App() {
           gameState={gs}
           socket={socket}
           user={user}
-          onClose={() => {
-            setShowDeepTactics(false);
-            window._toggleDeepTactics = null;
-          }}
+          onClose={() => setShowReviewOverlay(false)}
           isReferee={false}
-          isReviewFan={true}
+          isReviewFan={isReviewFan}
           reviewRole={reviewRole}
         />
       ) : (
@@ -408,17 +292,11 @@ export default function App() {
           textAlign: 'center',
         }}>
           <div style={{ fontSize: 32, marginBottom: 16 }}>⏳</div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: '#FFD700' }}>
-            Waiting for the Referee
-          </div>
-          <div style={{ fontSize: 14, color: '#aaa', marginTop: 8 }}>
-            The demonstration has not started yet. Please wait for the referee to open the demonstration.
-          </div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: '#FFD700' }}>Waiting for the Referee</div>
+          <div style={{ fontSize: 14, color: '#aaa', marginTop: 8 }}>The demonstration has not started yet. Please wait for the referee to open the demonstration.</div>
           <div style={{ fontSize: 12, color: '#555', marginTop: 12 }}>
             Phase: {gs?.deepTactics?.phase || 'IDLE'}
-            {gs?.deepTactics?.activeDemonstrator?.name && (
-              <span> — Active: {gs.deepTactics.activeDemonstrator.name}</span>
-            )}
+            {gs?.deepTactics?.activeDemonstrator?.name && <span> — Active: {gs.deepTactics.activeDemonstrator.name}</span>}
           </div>
         </div>
       )}
