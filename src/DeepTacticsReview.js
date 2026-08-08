@@ -1,4 +1,4 @@
-// src/DeepTacticsReview.js - Full Interactive Demonstration Pitch (FIXED)
+// src/DeepTacticsReview.js - Full Interactive Demonstration Pitch (FIXED ORIENTATION)
 import React, { useState, useEffect, useRef } from 'react';
 
 const DEEP_TACTICS_STYLES = {
@@ -12,8 +12,8 @@ const DEEP_TACTICS_STYLES = {
     zIndex: 9999,
     display: 'flex',
     flexDirection: 'column',
-    padding: '16px',
-    fontFamily: "'Segoe UI', sans-serif",
+    padding: 'clamp(8px, 2vw, 16px)',
+    fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
     color: '#fff',
   },
   header: {
@@ -23,6 +23,8 @@ const DEEP_TACTICS_STYLES = {
     padding: '8px 0',
     borderBottom: '1px solid #333',
     marginBottom: '12px',
+    flexWrap: 'wrap',
+    gap: '8px',
   },
   pitchContainer: {
     flex: 1,
@@ -39,13 +41,14 @@ const DEEP_TACTICS_STYLES = {
     border: '2px solid #4caf50',
     overflow: 'hidden',
     aspectRatio: '16/9',
-    minHeight: '400px',
-    maxHeight: '70vh',
+    minHeight: 'clamp(300px, 50vh, 500px)',
+    maxHeight: 'clamp(400px, 70vh, 600px)',
     cursor: 'default',
+    touchAction: 'none',
   },
   halfLabel: {
     position: 'absolute',
-    fontSize: '14px',
+    fontSize: 'clamp(10px, 1.2vw, 14px)',
     fontWeight: 'bold',
     color: 'rgba(255,255,255,0.4)',
     textTransform: 'uppercase',
@@ -54,13 +57,13 @@ const DEEP_TACTICS_STYLES = {
   },
   slotCircle: {
     position: 'absolute',
-    width: '44px',
-    height: '44px',
+    width: 'clamp(32px, 4vw, 44px)',
+    height: 'clamp(32px, 4vw, 44px)',
     borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '7px',
+    fontSize: 'clamp(6px, 0.7vw, 8px)',
     fontWeight: 'bold',
     color: '#fff',
     textAlign: 'center',
@@ -74,80 +77,99 @@ const DEEP_TACTICS_STYLES = {
     padding: '2px',
     lineHeight: '1.1',
     zIndex: 2,
+    touchAction: 'none',
   },
   controlToolbar: {
     display: 'flex',
-    gap: '8px',
+    gap: 'clamp(4px, 1vw, 8px)',
     padding: '8px 4px',
     justifyContent: 'center',
     flexWrap: 'wrap',
   },
   toolButton: {
-    padding: '6px 12px',
+    padding: 'clamp(4px, 0.8vw, 8px) clamp(8px, 1.5vw, 14px)',
     borderRadius: '6px',
     border: '1px solid #555',
     background: '#222',
     color: '#fff',
     cursor: 'pointer',
-    fontSize: '14px',
+    fontSize: 'clamp(11px, 1.2vw, 14px)',
     fontWeight: '600',
     transition: 'all 0.15s ease',
+    touchAction: 'manipulation',
+    userSelect: 'none',
+    WebkitUserSelect: 'none',
   },
   toolButtonActive: {
-    padding: '6px 12px',
+    padding: 'clamp(4px, 0.8vw, 8px) clamp(8px, 1.5vw, 14px)',
     borderRadius: '6px',
     border: '2px solid #FFD700',
     background: '#FFD700',
     color: '#000',
     cursor: 'pointer',
-    fontSize: '14px',
+    fontSize: 'clamp(11px, 1.2vw, 14px)',
     fontWeight: '700',
     transition: 'all 0.15s ease',
+    touchAction: 'manipulation',
+    userSelect: 'none',
+    WebkitUserSelect: 'none',
   },
   toolButtonPlaying: {
-    padding: '6px 12px',
+    padding: 'clamp(4px, 0.8vw, 8px) clamp(8px, 1.5vw, 14px)',
     borderRadius: '6px',
     border: '2px solid #4caf50',
     background: '#4caf50',
     color: '#fff',
     cursor: 'pointer',
-    fontSize: '14px',
+    fontSize: 'clamp(11px, 1.2vw, 14px)',
     fontWeight: '700',
     transition: 'all 0.15s ease',
+    touchAction: 'manipulation',
+    userSelect: 'none',
+    WebkitUserSelect: 'none',
   },
 };
 
+// ── CORRECT FORMATION SLOTS (Strikers at center line, GK at goal line) ──
+// These are defined with top% where 0% is the top of the half (center line side)
+// and 100% is the bottom of the half (goal line side)
 const FORMATION_SLOTS_DTR = {
   '4-4-2': [
-    { label: 'GK', top: 88, left: 50 }, { label: 'LB', top: 70, left: 15 }, { label: 'CB1', top: 70, left: 35 }, { label: 'CB2', top: 70, left: 65 }, { label: 'RB', top: 70, left: 85 },
-    { label: 'LM', top: 50, left: 15 }, { label: 'CM1', top: 50, left: 35 }, { label: 'CM2', top: 50, left: 65 }, { label: 'RM', top: 50, left: 85 },
-    { label: 'ST1', top: 25, left: 35 }, { label: 'ST2', top: 25, left: 65 }
+    { label: 'ST1', top: 10, left: 35 }, { label: 'ST2', top: 10, left: 65 },  // Strikers at top (center line)
+    { label: 'LM', top: 30, left: 15 }, { label: 'CM1', top: 30, left: 35 }, { label: 'CM2', top: 30, left: 65 }, { label: 'RM', top: 30, left: 85 },
+    { label: 'LB', top: 55, left: 15 }, { label: 'CB1', top: 55, left: 35 }, { label: 'CB2', top: 55, left: 65 }, { label: 'RB', top: 55, left: 85 },
+    { label: 'GK', top: 85, left: 50 },  // Goalkeeper at bottom (goal line)
   ],
   '4-3-3': [
-    { label: 'GK', top: 88, left: 50 }, { label: 'LB', top: 70, left: 15 }, { label: 'CB1', top: 70, left: 35 }, { label: 'CB2', top: 70, left: 65 }, { label: 'RB', top: 70, left: 85 },
-    { label: 'CM1', top: 50, left: 25 }, { label: 'CM2', top: 50, left: 50 }, { label: 'CM3', top: 50, left: 75 },
-    { label: 'LW', top: 20, left: 20 }, { label: 'ST', top: 15, left: 50 }, { label: 'RW', top: 20, left: 80 }
+    { label: 'LW', top: 8, left: 15 }, { label: 'ST', top: 8, left: 50 }, { label: 'RW', top: 8, left: 85 },
+    { label: 'CM1', top: 30, left: 25 }, { label: 'CM2', top: 30, left: 50 }, { label: 'CM3', top: 30, left: 75 },
+    { label: 'LB', top: 55, left: 15 }, { label: 'CB1', top: 55, left: 35 }, { label: 'CB2', top: 55, left: 65 }, { label: 'RB', top: 55, left: 85 },
+    { label: 'GK', top: 85, left: 50 },
   ],
   '3-5-2': [
-    { label: 'GK', top: 88, left: 50 }, { label: 'CB1', top: 70, left: 25 }, { label: 'CB2', top: 70, left: 50 }, { label: 'CB3', top: 70, left: 75 },
-    { label: 'LWB', top: 52, left: 10 }, { label: 'CM1', top: 50, left: 30 }, { label: 'CM2', top: 50, left: 50 }, { label: 'CM3', top: 50, left: 70 }, { label: 'RWB', top: 52, left: 90 },
-    { label: 'ST1', top: 22, left: 35 }, { label: 'ST2', top: 22, left: 65 }
+    { label: 'ST1', top: 10, left: 35 }, { label: 'ST2', top: 10, left: 65 },
+    { label: 'LWB', top: 25, left: 10 }, { label: 'CM1', top: 30, left: 30 }, { label: 'CM2', top: 30, left: 50 }, { label: 'CM3', top: 30, left: 70 }, { label: 'RWB', top: 25, left: 90 },
+    { label: 'CB1', top: 55, left: 25 }, { label: 'CB2', top: 55, left: 50 }, { label: 'CB3', top: 55, left: 75 },
+    { label: 'GK', top: 85, left: 50 },
   ],
   '4-5-1': [
-    { label: 'GK', top: 88, left: 50 }, { label: 'LB', top: 70, left: 15 }, { label: 'CB1', top: 70, left: 35 }, { label: 'CB2', top: 70, left: 65 }, { label: 'RB', top: 70, left: 85 },
-    { label: 'LM', top: 50, left: 10 }, { label: 'CM1', top: 50, left: 30 }, { label: 'CM2', top: 50, left: 50 }, { label: 'CM3', top: 50, left: 70 }, { label: 'RM', top: 50, left: 90 },
-    { label: 'ST', top: 18, left: 50 }
+    { label: 'ST', top: 10, left: 50 },
+    { label: 'LM', top: 25, left: 10 }, { label: 'CM1', top: 30, left: 30 }, { label: 'CM2', top: 30, left: 50 }, { label: 'CM3', top: 30, left: 70 }, { label: 'RM', top: 25, left: 90 },
+    { label: 'LB', top: 55, left: 15 }, { label: 'CB1', top: 55, left: 35 }, { label: 'CB2', top: 55, left: 65 }, { label: 'RB', top: 55, left: 85 },
+    { label: 'GK', top: 85, left: 50 },
   ],
   '5-3-2': [
-    { label: 'GK', top: 88, left: 50 }, { label: 'LWB', top: 68, left: 10 }, { label: 'CB1', top: 70, left: 28 }, { label: 'CB2', top: 70, left: 50 }, { label: 'CB3', top: 70, left: 72 }, { label: 'RWB', top: 68, left: 90 },
-    { label: 'CM1', top: 48, left: 25 }, { label: 'CM2', top: 48, left: 50 }, { label: 'CM3', top: 48, left: 75 },
-    { label: 'ST1', top: 22, left: 35 }, { label: 'ST2', top: 22, left: 65 }
+    { label: 'ST1', top: 10, left: 35 }, { label: 'ST2', top: 10, left: 65 },
+    { label: 'CM1', top: 30, left: 25 }, { label: 'CM2', top: 30, left: 50 }, { label: 'CM3', top: 30, left: 75 },
+    { label: 'LWB', top: 55, left: 10 }, { label: 'CB1', top: 55, left: 28 }, { label: 'CB2', top: 55, left: 50 }, { label: 'CB3', top: 55, left: 72 }, { label: 'RWB', top: 55, left: 90 },
+    { label: 'GK', top: 85, left: 50 },
   ],
   '4-2-3-1': [
-    { label: 'GK', top: 88, left: 50 }, { label: 'LB', top: 72, left: 15 }, { label: 'CB1', top: 72, left: 35 }, { label: 'CB2', top: 72, left: 65 }, { label: 'RB', top: 72, left: 85 },
-    { label: 'DM1', top: 57, left: 35 }, { label: 'DM2', top: 57, left: 65 },
-    { label: 'LAM', top: 38, left: 20 }, { label: 'CAM', top: 35, left: 50 }, { label: 'RAM', top: 38, left: 80 },
-    { label: 'ST', top: 18, left: 50 }
+    { label: 'ST', top: 10, left: 50 },
+    { label: 'LAM', top: 22, left: 20 }, { label: 'CAM', top: 22, left: 50 }, { label: 'RAM', top: 22, left: 80 },
+    { label: 'DM1', top: 35, left: 35 }, { label: 'DM2', top: 35, left: 65 },
+    { label: 'LB', top: 55, left: 15 }, { label: 'CB1', top: 55, left: 35 }, { label: 'CB2', top: 55, left: 65 }, { label: 'RB', top: 55, left: 85 },
+    { label: 'GK', top: 85, left: 50 },
   ]
 };
 
@@ -155,7 +177,7 @@ function PitchMarkings() {
   return (
     <>
       {/* Center circle */}
-      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '80px', height: '80px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.15)', pointerEvents: 'none', zIndex: 1 }} />
+      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 'clamp(50px, 8vw, 80px)', height: 'clamp(50px, 8vw, 80px)', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.15)', pointerEvents: 'none', zIndex: 1 }} />
       {/* Center line */}
       <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '2px', background: 'rgba(255,255,255,0.15)', pointerEvents: 'none', zIndex: 1 }} />
       {/* Center dot */}
@@ -182,6 +204,7 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
   const [isActiveDemonstrator, setIsActiveDemonstrator] = useState(false);
   const [showToolbar, setShowToolbar] = useState(false);
   const pitchRef = useRef(null);
+  const dragDataRef = useRef(null);
 
   // ── SOCKET LISTENERS ──
   useEffect(() => {
@@ -278,28 +301,40 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
     socket.emit('demoSelectSpot', { half, slotIndex: index, action });
   };
 
-  // ── DRAG HANDLERS ──
+  // ── DRAG HANDLERS (Supports both mouse and touch) ──
   const handleDragStart = (e, half, index) => {
     if (!canInteract) return;
+    e.preventDefault();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    dragDataRef.current = { half, index, clientX, clientY, isDragging: true };
     setIsDragging(true);
   };
 
-  const handleDragEnd = (e, half, index) => {
-    if (!canInteract || !isDragging) return;
-    setIsDragging(false);
-    const rect = pitchRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    socket.emit('demoMovePlayer', { half, slotIndex: index, newX: x, newY: y });
+  const handleDragMove = (e) => {
+    if (!canInteract || !isDragging || !dragDataRef.current) return;
+    e.preventDefault();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    dragDataRef.current.clientX = clientX;
+    dragDataRef.current.clientY = clientY;
   };
 
-  // ── RENDER HALF WITH PLAYER NAMES (Team 1 faces DOWN, Team 2 faces UP) ──
+  const handleDragEnd = (e) => {
+    if (!canInteract || !isDragging || !dragDataRef.current) return;
+    e.preventDefault();
+    const rect = pitchRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = ((dragDataRef.current.clientX - rect.left) / rect.width) * 100;
+    const y = ((dragDataRef.current.clientY - rect.top) / rect.height) * 100;
+    const { half, index } = dragDataRef.current;
+    socket.emit('demoMovePlayer', { half, slotIndex: index, newX: x, newY: y });
+    setIsDragging(false);
+    dragDataRef.current = null;
+  };
+
+  // ── RENDER HALF ──
   const renderHalf = (half, slotDefs, teamSlots, teamName, teamColor, isTopHalf) => {
-    // Team 1 (top half) - players face DOWN (normal)
-    // Team 2 (bottom half) - players face UP (flipped)
-    const isFlipped = !isTopHalf;
-    
     return (
       <div style={{ 
         position: 'absolute', 
@@ -326,19 +361,17 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
           const isSelected = selectedSpots.includes(`${half}-${idx}`);
           const isAnimatingHighlight = animationStep?.highlightSlot === idx && animationStep?.half === half;
           const isEmpty = !player;
-
-          // ── DISPLAY PLAYER NAME if exists, otherwise show position label ──
           const displayName = player ? player.name : slot.label;
 
-          // ── For Team 2 (bottom half), flip the text ──
-          const textTransform = isFlipped ? 'scaleY(-1)' : 'none';
+          // ── For Team 2 (bottom half), flip the position vertically ──
+          const topPos = isTopHalf ? slot.top : (100 - slot.top);
 
           return (
             <div
               key={`${half}-${idx}`}
               style={{
                 ...DEEP_TACTICS_STYLES.slotCircle,
-                top: isTopHalf ? `${slot.top}%` : `${100 - slot.top}%`,
+                top: `${topPos}%`,
                 left: `${slot.left}%`,
                 background: player ? teamColor : 'rgba(255,255,255,0.05)',
                 border: isSelected ? '3px dashed #FFD700' : 
@@ -357,8 +390,11 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
                 }
               }}
               onMouseDown={(e) => handleDragStart(e, half, idx)}
-              onMouseUp={(e) => handleDragEnd(e, half, idx)}
-              onMouseLeave={(e) => { if (isDragging) handleDragEnd(e, half, idx); }}
+              onMouseUp={handleDragEnd}
+              onMouseLeave={(e) => { if (isDragging) handleDragEnd(e); }}
+              onTouchStart={(e) => handleDragStart(e, half, idx)}
+              onTouchMove={handleDragMove}
+              onTouchEnd={handleDragEnd}
             >
               <span style={{ 
                 display: 'flex',
@@ -366,8 +402,7 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
                 justifyContent: 'center',
                 width: '100%',
                 height: '100%',
-                transform: textTransform,
-                fontSize: player ? '8px' : '6px',
+                fontSize: player ? 'clamp(7px, 0.8vw, 9px)' : 'clamp(5px, 0.6vw, 7px)',
                 fontWeight: player ? 'bold' : 'normal',
                 padding: '1px',
                 lineHeight: '1.1',
@@ -388,21 +423,23 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
       {/* ── HEADER ── */}
       <div style={DEEP_TACTICS_STYLES.header}>
         <div>
-          <span style={{ fontWeight: 800, fontSize: '20px', color: '#FFD700' }}>⚽ Deep Tactics Review</span>
-          <span style={{ marginLeft: '12px', fontSize: '12px', color: '#888' }}>
+          <span style={{ fontWeight: 800, fontSize: 'clamp(16px, 2.5vw, 22px)', color: '#FFD700' }}>⚽ Deep Tactics Review</span>
+          <span style={{ marginLeft: '12px', fontSize: 'clamp(10px, 1vw, 12px)', color: '#888' }}>
             {isReferee ? '🔴 Referee View' : isReviewFan ? '👤 Review Fan' : '👀 Spectator View'}
           </span>
         </div>
         <button 
           onClick={onClose} 
           style={{ 
-            padding: '6px 16px', 
+            padding: 'clamp(4px, 0.8vw, 8px) clamp(12px, 2vw, 20px)', 
             background: '#dc3545', 
             color: '#fff', 
             border: 'none', 
             borderRadius: '6px', 
             cursor: 'pointer', 
-            fontWeight: '600' 
+            fontWeight: '600',
+            fontSize: 'clamp(12px, 1.2vw, 14px)',
+            touchAction: 'manipulation',
           }}
         >
           ✕ Close
@@ -415,11 +452,12 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
         padding: '8px 12px', 
         borderRadius: '6px', 
         marginBottom: '12px', 
-        fontSize: '13px', 
+        fontSize: 'clamp(11px, 1vw, 13px)', 
         color: '#aaa', 
         display: 'flex', 
         justifyContent: 'space-between', 
         flexWrap: 'wrap',
+        gap: '8px',
         zIndex: 1,
       }}>
         <span>Phase: {gs.deepTactics?.phase || 'IDLE'}</span>
@@ -430,7 +468,7 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
         )}
       </div>
 
-      {/* ── CONTROL TOOLBAR (Active Demonstrator Only) ── */}
+      {/* ── CONTROL TOOLBAR ── */}
       {showToolbar && (
         <div style={DEEP_TACTICS_STYLES.controlToolbar}>
           <button 
@@ -474,39 +512,53 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
 
       {/* ── PITCH ── */}
       <div style={DEEP_TACTICS_STYLES.pitchContainer}>
-        <div ref={pitchRef} style={DEEP_TACTICS_STYLES.pitchWrapper}>
+        <div 
+          ref={pitchRef} 
+          style={DEEP_TACTICS_STYLES.pitchWrapper}
+          onTouchMove={handleDragMove}
+          onTouchEnd={handleDragEnd}
+        >
           <PitchMarkings />
           
-          {/* Team 1 (top half) - faces DOWN */}
+          {/* Team 1 (top half) - strikers at center, GK at goal */}
           {renderHalf('team1', slots1, team1Slots, gs.team1Name || 'Team 1', '#1565c0', true)}
           
-          {/* Team 2 (bottom half) - faces UP */}
+          {/* Team 2 (bottom half) - strikers at center, GK at goal */}
           {renderHalf('team2', slots2, team2Slots, gs.team2Name || 'Team 2', '#b71c1c', false)}
           
-          {/* ── BALL ── */}
+          {/* ── BALL (Fully visible, not transparent) ── */}
           <div style={{
             position: 'absolute',
             top: `${ballPos.y}%`,
             left: `${ballPos.x}%`,
             transform: 'translate(-50%, -50%)',
-            width: '16px',
-            height: '16px',
+            width: 'clamp(14px, 1.8vw, 20px)',
+            height: 'clamp(14px, 1.8vw, 20px)',
             borderRadius: '50%',
-            background: 'radial-gradient(circle at 30% 30%, #ffffff, #cccccc)',
-            boxShadow: '0 0 20px rgba(255,255,255,0.4), inset 0 -2px 4px rgba(0,0,0,0.2)',
+            background: 'radial-gradient(circle at 35% 35%, #ffffff, #cccccc)',
+            boxShadow: '0 0 30px rgba(255,255,255,0.5), 0 4px 15px rgba(0,0,0,0.5), inset 0 -3px 6px rgba(0,0,0,0.2)',
             zIndex: 5,
             pointerEvents: 'none',
-            border: '2px solid rgba(255,255,255,0.8)',
+            border: '2px solid rgba(255,255,255,0.9)',
           }}>
             <div style={{
               position: 'absolute',
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              width: '4px',
-              height: '4px',
+              width: 'clamp(3px, 0.4vw, 5px)',
+              height: 'clamp(3px, 0.4vw, 5px)',
               borderRadius: '50%',
               background: 'rgba(0,0,0,0.3)',
+            }} />
+            <div style={{
+              position: 'absolute',
+              top: '25%',
+              left: '25%',
+              width: 'clamp(3px, 0.3vw, 4px)',
+              height: 'clamp(3px, 0.3vw, 4px)',
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.6)',
             }} />
           </div>
         </div>
