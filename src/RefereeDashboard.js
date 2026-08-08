@@ -1,5 +1,5 @@
-// src/RefereeDashboard.js - COMPLETE REWRITE
-import React, { useState, useEffect, useCallback } from 'react';
+// src/RefereeDashboard.js - COMPLETE FIXED VERSION
+import React, { useState, useEffect } from 'react';
 
 const STYLES = {
   container: { padding: '20px', background: '#000', minHeight: '100vh', fontFamily: 'sans-serif', color: '#eee', boxSizing: 'border-box' },
@@ -15,6 +15,7 @@ const STYLES = {
 
 const FORMATIONS = ['4-4-2', '4-3-3', '3-5-2', '4-5-1', '5-3-2', '4-2-3-1'];
 
+// ── CORRECT FORMATION SLOTS ──
 const SLOTS = {
   '4-4-2': [
     { label: 'ST1', top: 10, left: 35 }, { label: 'ST2', top: 10, left: 65 },
@@ -55,24 +56,74 @@ const SLOTS = {
   ],
 };
 
+// ── LIVE PITCH VIEW (For Referee's live demonstration view) ──
 function LivePitchView({ formation, slots, title, color }) {
   const defs = SLOTS[formation] || SLOTS['4-4-2'];
-  const flipped = title.includes('Team 2');
+  const isFlipped = title.includes('Team 2');
+  
   return (
-    <div style={{ flex: 1, minWidth: '180px', background: '#111', border: '1px solid #333', padding: 8, borderRadius: 6 }}>
-      <div style={{ fontSize: 'clamp(10px, 0.9vw, 12px)', fontWeight: 'bold', color, marginBottom: 4, textTransform: 'uppercase' }}>{title}</div>
-      <div style={{ position: 'relative', width: '100%', paddingTop: '130%', background: 'linear-gradient(180deg, #1b4d22 0%, #0f3014 100%)', border: '1px solid #444', borderRadius: 4, overflow: 'hidden' }}>
+    <div style={{ flex: 1, minWidth: '200px', background: '#111', border: '1px solid #333', padding: 10, borderRadius: 6 }}>
+      <div style={{ fontSize: 'clamp(11px, 1vw, 13px)', fontWeight: 'bold', color, marginBottom: 4, textTransform: 'uppercase' }}>{title}</div>
+      <div style={{ 
+        position: 'relative', 
+        width: '100%', 
+        paddingTop: '130%', 
+        background: 'linear-gradient(180deg, #1b4d22 0%, #0f3014 100%)', 
+        border: '1px solid #444', 
+        borderRadius: 4, 
+        overflow: 'hidden' 
+      }}>
         <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 1, background: 'rgba(255,255,255,0.1)' }} />
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 30, height: 30, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)' }} />
+        
         {defs.map((s, i) => {
-          const p = slots && slots[i] ? slots[i] : null;
-          const has = p && p.name && p.name.trim() !== '';
-          const disp = has ? p.name : s.label;
-          const top = flipped ? (100 - s.top) : s.top;
+          const player = slots && slots[i] ? slots[i] : null;
+          const hasPlayer = player && player.name && player.name.trim() !== '';
+          const displayName = hasPlayer ? player.name : s.label;
+          const topPos = isFlipped ? (100 - s.top) : s.top;
+          
           return (
-            <div key={i} style={{ position: 'absolute', top: `${top}%`, left: `${s.left}%`, transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
-              <div style={{ width: 'clamp(24px, 2.5vw, 32px)', height: 'clamp(24px, 2.5vw, 32px)', borderRadius: '50%', background: has ? color : 'rgba(255,255,255,0.06)', border: has ? '2px solid #fff' : '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'clamp(5px, 0.5vw, 6px)', fontWeight: 'bold', color: '#fff', padding: '1px', overflow: 'hidden', wordBreak: 'break-word' }}>
-                <span style={{ fontSize: has ? 'clamp(5px, 0.5vw, 7px)' : 'clamp(4px, 0.4vw, 5px)', lineHeight: 1.1, textAlign: 'center', wordBreak: 'break-word' }}>{disp}</span>
+            <div 
+              key={i} 
+              style={{ 
+                position: 'absolute', 
+                top: `${topPos}%`, 
+                left: `${s.left}%`, 
+                transform: 'translate(-50%, -50%)', 
+                textAlign: 'center',
+              }}
+            >
+              <div style={{ 
+                width: 'clamp(28px, 3vw, 36px)', 
+                height: 'clamp(28px, 3vw, 36px)', 
+                borderRadius: '50%', 
+                background: hasPlayer ? color : 'rgba(255,255,255,0.06)', 
+                border: hasPlayer ? '2px solid #fff' : '1px solid rgba(255,255,255,0.15)',
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                fontSize: 'clamp(5px, 0.5vw, 7px)', 
+                fontWeight: 'bold', 
+                color: '#fff', 
+                padding: '1px', 
+                boxSizing: 'border-box', 
+                overflow: 'hidden', 
+                wordBreak: 'break-word',
+                transition: 'all 0.2s ease',
+              }}>
+                <span style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%',
+                  height: '100%',
+                  fontSize: hasPlayer ? 'clamp(6px, 0.6vw, 8px)' : 'clamp(5px, 0.5vw, 6px)',
+                  lineHeight: '1.1',
+                  textAlign: 'center',
+                  wordBreak: 'break-word',
+                }}>
+                  {displayName}
+                </span>
               </div>
             </div>
           );
@@ -82,24 +133,77 @@ function LivePitchView({ formation, slots, title, color }) {
   );
 }
 
-function RefereePitchView({ formation, slots, title, color, onSpotClick, selectedPlayer }) {
+// ── SETUP PITCH VIEW (For Referee to place players) ──
+function SetupPitchView({ formation, slots, title, color, onSpotClick, selectedPlayer }) {
   const defs = SLOTS[formation] || SLOTS['4-4-2'];
+  
   return (
     <div style={{ flex: 1, minWidth: '200px', background: '#111', border: '1px solid #333', padding: 10, borderRadius: 6 }}>
-      <div style={{ fontSize: 'clamp(11px, 0.9vw, 13px)', fontWeight: 'bold', color, marginBottom: 4, textTransform: 'uppercase' }}>{title} ({formation})</div>
-      <div style={{ position: 'relative', width: '100%', paddingTop: '130%', background: 'linear-gradient(180deg, #1b4d22 0%, #0f3014 100%)', border: '1px solid #444', borderRadius: 4, overflow: 'hidden' }}>
+      <div style={{ fontSize: 'clamp(11px, 1vw, 13px)', fontWeight: 'bold', color, marginBottom: 4, textTransform: 'uppercase' }}>{title} ({formation})</div>
+      <div style={{ 
+        position: 'relative', 
+        width: '100%', 
+        paddingTop: '130%', 
+        background: 'linear-gradient(180deg, #1b4d22 0%, #0f3014 100%)', 
+        border: '1px solid #444', 
+        borderRadius: 4, 
+        overflow: 'hidden' 
+      }}>
         <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 1, background: 'rgba(255,255,255,0.1)' }} />
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 30, height: 30, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)' }} />
+        
         {defs.map((s, i) => {
-          const p = slots && slots[i] ? slots[i] : null;
-          const has = p && p.name && p.name.trim() !== '';
-          const disp = has ? p.name : s.label;
-          const empty = !has;
-          const canPlace = selectedPlayer !== null && empty;
+          const player = slots && slots[i] ? slots[i] : null;
+          const hasPlayer = player && player.name && player.name.trim() !== '';
+          const displayName = hasPlayer ? player.name : s.label;
+          const isEmpty = !hasPlayer;
+          const canPlace = selectedPlayer !== null && isEmpty;
+          
           return (
-            <div key={i} onClick={() => { if (canPlace && onSpotClick) onSpotClick(i); }} style={{ position: 'absolute', top: `${s.top}%`, left: `${s.left}%`, transform: 'translate(-50%, -50%)', textAlign: 'center', cursor: canPlace ? 'pointer' : 'default' }}>
-              <div style={{ width: 'clamp(28px, 3vw, 36px)', height: 'clamp(28px, 3vw, 36px)', borderRadius: '50%', background: has ? color : 'rgba(255,255,255,0.06)', border: canPlace ? '2px dashed #FFD700' : has ? '2px solid #fff' : '1px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'clamp(5px, 0.5vw, 7px)', fontWeight: 'bold', color: '#fff', padding: '1px', overflow: 'hidden', wordBreak: 'break-word', boxShadow: canPlace ? '0 0 15px rgba(255,215,0,0.2)' : 'none' }}>
-                <span style={{ fontSize: has ? 'clamp(6px, 0.6vw, 8px)' : 'clamp(5px, 0.5vw, 6px)', lineHeight: 1.1, textAlign: 'center', wordBreak: 'break-word' }}>{disp}</span>
+            <div 
+              key={i} 
+              onClick={() => { if (canPlace && onSpotClick) onSpotClick(i); }}
+              style={{ 
+                position: 'absolute', 
+                top: `${s.top}%`, 
+                left: `${s.left}%`, 
+                transform: 'translate(-50%, -50%)', 
+                textAlign: 'center',
+                cursor: canPlace ? 'pointer' : 'default',
+              }}
+            >
+              <div style={{ 
+                width: 'clamp(28px, 3vw, 36px)', 
+                height: 'clamp(28px, 3vw, 36px)', 
+                borderRadius: '50%', 
+                background: hasPlayer ? color : 'rgba(255,255,255,0.06)', 
+                border: canPlace ? '2px dashed #FFD700' : hasPlayer ? '2px solid #fff' : '1px solid rgba(255,255,255,0.15)',
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                fontSize: 'clamp(5px, 0.5vw, 7px)', 
+                fontWeight: 'bold', 
+                color: '#fff', 
+                padding: '1px', 
+                boxSizing: 'border-box', 
+                overflow: 'hidden', 
+                wordBreak: 'break-word',
+                transition: 'all 0.2s ease',
+                boxShadow: canPlace ? '0 0 15px rgba(255,215,0,0.2)' : 'none',
+              }}>
+                <span style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%',
+                  height: '100%',
+                  fontSize: hasPlayer ? 'clamp(6px, 0.6vw, 8px)' : 'clamp(5px, 0.5vw, 6px)',
+                  lineHeight: '1.1',
+                  textAlign: 'center',
+                  wordBreak: 'break-word',
+                }}>
+                  {displayName}
+                </span>
               </div>
               {canPlace && <div style={{ fontSize: 4, color: '#FFD700', marginTop: 1 }}>PLACE</div>}
             </div>
@@ -114,7 +218,7 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
   const gs = gameState || propGs || {};
   const [fanSearch, setFanSearch] = useState('');
   const [selectedPlayer, setSelectedPlayer] = useState(null);
-  const [livePitch, setLivePitch] = useState({});
+  const [livePitchState, setLivePitchState] = useState({});
 
   const viewers = Array.isArray(gs.allViewers) ? gs.allViewers : [];
   const t1Players = gs.team1Picks || [];
@@ -122,8 +226,11 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
   const t1Slots = gs.deepTactics?.pitchState?.team1Slots || [];
   const t2Slots = gs.deepTactics?.pitchState?.team2Slots || [];
 
+  // ── Update live pitch state when game state changes ──
   useEffect(() => {
-    if (gs?.deepTactics?.pitchState) setLivePitch(gs.deepTactics.pitchState);
+    if (gs?.deepTactics?.pitchState) {
+      setLivePitchState(gs.deepTactics.pitchState);
+    }
   }, [gs]);
 
   const handleFormation = (team, f) => socket.emit('refSetFormation', { team, formation: f });
@@ -141,6 +248,12 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
 
   if (!isReferee) return null;
 
+  const liveFormation1 = gs.team1Formation || '4-4-2';
+  const liveFormation2 = gs.team2Formation || '4-4-2';
+  const liveSlots1 = livePitchState.team1Slots || [];
+  const liveSlots2 = livePitchState.team2Slots || [];
+  const ballPos = livePitchState.ballPosition || { x: 50, y: 50 };
+
   return (
     <div style={STYLES.container}>
       <div style={STYLES.mainHeader}>
@@ -148,6 +261,7 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
         <span style={{ fontSize: '0.85rem', background: '#333', padding: '4px 10px', borderRadius: 12, color: '#00f2fe' }}>Phase: {gs.deepTactics?.phase || 'IDLE'}</span>
       </div>
 
+      {/* ── PLAYER POOL & FORMATION CONTROLS ── */}
       <div style={STYLES.panel}>
         <h3 style={STYLES.header}>👥 Player Pool & Formation</h3>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
@@ -185,28 +299,43 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
         {selectedPlayer && <div style={{ fontSize: 11, color: '#FFD700', marginTop: 6, padding: '4px 8px', background: 'rgba(255,215,0,0.1)', borderRadius: 4 }}>✅ Selected: {[...t1Players, ...t2Players].find(p => p.id === selectedPlayer)?.name} — Tap empty spot</div>}
       </div>
 
+      {/* ── SETUP PITCH ── */}
       <div style={STYLES.panel}>
-        <h3 style={STYLES.header}>⚽ Setup Pitch</h3>
+        <h3 style={STYLES.header}>⚽ Setup Pitch — Tap a player, then tap an empty spot</h3>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <RefereePitchView formation={gs.team1Formation || '4-4-2'} slots={t1Slots} title={gs.team1Name || 'Team 1'} color="#1565c0" onSpotClick={(i) => handleSpot('team1', i)} selectedPlayer={selectedPlayer} />
-          <RefereePitchView formation={gs.team2Formation || '4-4-2'} slots={t2Slots} title={gs.team2Name || 'Team 2'} color="#b71c1c" onSpotClick={(i) => handleSpot('team2', i)} selectedPlayer={selectedPlayer} />
+          <SetupPitchView formation={gs.team1Formation || '4-4-2'} slots={t1Slots} title={gs.team1Name || 'Team 1'} color="#1565c0" onSpotClick={(i) => handleSpot('team1', i)} selectedPlayer={selectedPlayer} />
+          <SetupPitchView formation={gs.team2Formation || '4-4-2'} slots={t2Slots} title={gs.team2Name || 'Team 2'} color="#b71c1c" onSpotClick={(i) => handleSpot('team2', i)} selectedPlayer={selectedPlayer} />
         </div>
       </div>
 
+      {/* ── LIVE DEMONSTRATION VIEW (EXACTLY what reviewer sees) ── */}
       {gs.deepTactics?.phase === 'LIVE_DEMO' && (
         <div style={{ ...STYLES.panel, border: '2px solid #4caf50', background: '#0a1a0a' }}>
-          <h3 style={{ ...STYLES.header, color: '#4caf50' }}>🔴 LIVE DEMONSTRATION — {gs.deepTactics?.activeDemonstrator?.name || 'Reviewer'}</h3>
+          <h3 style={{ ...STYLES.header, color: '#4caf50' }}>
+            🔴 LIVE DEMONSTRATION — {gs.deepTactics?.activeDemonstrator?.name || 'Reviewer'}
+          </h3>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            <LivePitchView formation={gs.team1Formation || '4-4-2'} slots={livePitch.team1Slots || []} title={`${gs.team1Name || 'Team 1'} (Live)`} color="#1565c0" />
-            <LivePitchView formation={gs.team2Formation || '4-4-2'} slots={livePitch.team2Slots || []} title={`${gs.team2Name || 'Team 2'} (Live)`} color="#b71c1c" />
+            <LivePitchView 
+              formation={liveFormation1} 
+              slots={liveSlots1} 
+              title={`${gs.team1Name || 'Team 1'} (${liveFormation1})`} 
+              color="#1565c0" 
+            />
+            <LivePitchView 
+              formation={liveFormation2} 
+              slots={liveSlots2} 
+              title={`${gs.team2Name || 'Team 2'} (${liveFormation2})`} 
+              color="#b71c1c" 
+            />
           </div>
           <div style={{ fontSize: '0.75rem', color: '#aaa', marginTop: 6, display: 'flex', justifyContent: 'space-between' }}>
-            <span>Active: {gs.deepTactics?.activeDemonstrator?.name || 'None'}</span>
-            <span>Ball: ({Math.round(livePitch.ballPosition?.x || 50)}%, {Math.round(livePitch.ballPosition?.y || 50)}%)</span>
+            <span>🔴 Active: {gs.deepTactics?.activeDemonstrator?.name || 'None'}</span>
+            <span>⚽ Ball: ({Math.round(ballPos.x || 50)}%, {Math.round(ballPos.y || 50)}%)</span>
           </div>
         </div>
       )}
 
+      {/* ── CONTROLS ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
         <div>
           <div style={STYLES.panel}>
@@ -233,6 +362,7 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
           </div>
         </div>
 
+        {/* ── FANS ROSTER ── */}
         <div style={STYLES.panel}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
             <h3 style={{ ...STYLES.header, marginBottom: 0 }}>👥 Fans ({viewers.length})</h3>
