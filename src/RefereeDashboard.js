@@ -1,4 +1,4 @@
-// src/RefereeDashboard.js - Referee Dashboard (FULLY WORKING)
+// src/RefereeDashboard.js - FINAL WORKING VERSION
 import React, { useState, useEffect, useCallback } from 'react';
 
 const STYLES = {
@@ -75,9 +75,10 @@ function LivePitchView({ formation, slots, title, color }) {
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 40, height: 40, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)' }} />
         
         {slotDefs.map((s, idx) => {
-          const player = slots && slots[idx];
-          const displayName = player ? player.name : s.label;
+          const player = slots && slots[idx] ? slots[idx] : null;
+          const displayName = player && player.name ? player.name : s.label;
           const topPos = isFlipped ? (100 - s.top) : s.top;
+          const hasPlayer = player && player.name;
           
           return (
             <div 
@@ -94,8 +95,8 @@ function LivePitchView({ formation, slots, title, color }) {
                 width: 'clamp(28px, 3vw, 36px)', 
                 height: 'clamp(28px, 3vw, 36px)', 
                 borderRadius: '50%', 
-                background: player ? color : 'rgba(255,255,255,0.08)', 
-                border: player ? '2px solid #fff' : '1px solid rgba(255,255,255,0.2)',
+                background: hasPlayer ? color : 'rgba(255,255,255,0.08)', 
+                border: hasPlayer ? '2px solid #fff' : '1px solid rgba(255,255,255,0.2)',
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center', 
@@ -114,7 +115,7 @@ function LivePitchView({ formation, slots, title, color }) {
                   justifyContent: 'center',
                   width: '100%',
                   height: '100%',
-                  fontSize: player ? 'clamp(6px, 0.7vw, 8px)' : 'clamp(5px, 0.5vw, 6px)',
+                  fontSize: hasPlayer ? 'clamp(6px, 0.7vw, 8px)' : 'clamp(5px, 0.5vw, 6px)',
                   lineHeight: '1.1',
                   textAlign: 'center',
                   wordBreak: 'break-word',
@@ -149,10 +150,10 @@ function RefereePitchView({ formation, slots, title, color, onSpotClick, selecte
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 50, height: 50, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)' }} />
         
         {slotDefs.map((s, idx) => {
-          const card = slots && slots[idx];
-          const isEmpty = !card;
+          const card = slots && slots[idx] ? slots[idx] : null;
+          const isEmpty = !card || !card.name;
           const isSelected = selectedPlayer !== null && isEmpty;
-          const displayName = card ? card.name : s.label;
+          const displayName = card && card.name ? card.name : s.label;
           
           return (
             <div 
@@ -175,8 +176,8 @@ function RefereePitchView({ formation, slots, title, color, onSpotClick, selecte
                 width: 36, 
                 height: 36, 
                 borderRadius: '50%', 
-                background: card ? color : 'rgba(255,255,255,0.08)', 
-                border: isSelected ? '2px dashed #FFD700' : card ? '2px solid #fff' : '1px solid rgba(255,255,255,0.2)',
+                background: card && card.name ? color : 'rgba(255,255,255,0.08)', 
+                border: isSelected ? '2px dashed #FFD700' : (card && card.name ? '2px solid #fff' : '1px solid rgba(255,255,255,0.2)'),
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center', 
@@ -196,7 +197,7 @@ function RefereePitchView({ formation, slots, title, color, onSpotClick, selecte
                   justifyContent: 'center',
                   width: '100%',
                   height: '100%',
-                  fontSize: card ? '7px' : '6px',
+                  fontSize: card && card.name ? '7px' : '6px',
                   lineHeight: '1.1',
                   textAlign: 'center',
                   wordBreak: 'break-word',
@@ -238,7 +239,7 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
   const handleSpotClick = (half, slotIndex) => {
     if (!selectedPlayer) return;
     const halfSlots = half === 'team1' ? team1Slots : team2Slots;
-    if (halfSlots[slotIndex]) return;
+    if (halfSlots[slotIndex] && halfSlots[slotIndex].name) return;
     socket.emit('refPlacePlayerOnPitch', { half, slotIndex, playerId: selectedPlayer });
     setSelectedPlayer(null);
   };
