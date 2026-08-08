@@ -407,7 +407,7 @@ io.on('connection', (socket) => {
     io.emit('deepTacticsState', state.deepTactics);
   });
 
-  // ── ASSIGN REVIEW FANS BY TX ID (still available for direct assignment) ──
+  // ── ASSIGN REVIEW FANS BY TX ID ──
   socket.on('refAssignReviewFans', ({ firstFanTxId, secondFanTxId }) => {
     if (!state.deepTactics.active) return;
     
@@ -455,7 +455,28 @@ io.on('connection', (socket) => {
       state.deepTactics.secondReviewFan = null;
     }
     
+    if (!state.deepTactics.firstReviewFan && !state.deepTactics.secondReviewFan) {
+      state.deepTactics.phase = 'ASSIGNING';
+    } else {
+      state.deepTactics.phase = 'SETUP';
+    }
+    
+    broadcast();
+    io.emit('deepTacticsState', state.deepTactics);
+  });
+
+  // ── ADDED: CLEAR ALL REVIEWERS ──
+  socket.on('refClearAllReviewers', () => {
+    if (!state.deepTactics.active) return;
+    
+    state.deepTactics.firstReviewFan = null;
+    state.deepTactics.secondReviewFan = null;
+    state.deepTactics.activeDemonstrator = null;
     state.deepTactics.phase = 'ASSIGNING';
+    state.deepTactics.pitchState.selectedSpots = [];
+    state.deepTactics.pitchState.animationQueue = [];
+    state.deepTactics.pitchState.isAnimating = false;
+    
     broadcast();
     io.emit('deepTacticsState', state.deepTactics);
   });
@@ -468,7 +489,6 @@ io.on('connection', (socket) => {
     io.emit('deepTacticsState', state.deepTactics);
   });
 
-  // ── START DEMONSTRATION (by role, not ID) ──
   socket.on('refStartDemonstration', ({ role }) => {
     if (!state.deepTactics.active || !state.deepTactics.pitchState.showDemo) return;
     
