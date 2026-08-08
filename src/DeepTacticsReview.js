@@ -1,4 +1,4 @@
-// src/DeepTacticsReview.js - COMPLETE FIXED VERSION
+// src/DeepTacticsReview.js — COMPLETE REWRITE
 import React, { useState, useEffect, useRef } from 'react';
 
 const styles = {
@@ -126,7 +126,6 @@ const styles = {
 };
 
 // ── CORRECT FORMATION SLOTS ──
-// STRIKERS at TOP of half (center line), GK at BOTTOM of half (goal line)
 const SLOTS = {
   '4-4-2': [
     { label: 'ST1', top: 10, left: 35 }, { label: 'ST2', top: 10, left: 65 },
@@ -321,7 +320,6 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
 
   // ── RENDER HALF ──
   const renderHalf = (half, slotDefs, teamSlots, teamName, color, isTop) => {
-    // For Team 2 (bottom half), flip the positions
     const isFlipped = !isTop;
     
     return (
@@ -343,7 +341,6 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
           const display = hasPlayer ? player.name : slot.label;
           const isSel = selectedSpots.includes(`${half}-${idx}`);
           const isHighlight = animStep?.highlightSlot === idx && animStep?.half === half;
-          // ── For Team 2, flip vertically ──
           const topPos = isFlipped ? (100 - slot.top) : slot.top;
 
           return (
@@ -383,7 +380,6 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
 
   return (
     <div style={styles.overlay}>
-      {/* HEADER */}
       <div style={styles.header}>
         <div>
           <span style={{ fontWeight: 800, fontSize: 'clamp(16px, 2.5vw, 22px)', color: '#FFD700' }}>⚽ Deep Tactics Review</span>
@@ -394,13 +390,11 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
         <button onClick={onClose} style={{ padding: '4px 16px', background: '#dc3545', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: 'clamp(12px, 1.2vw, 14px)' }}>✕ Close</button>
       </div>
 
-      {/* STATUS */}
       <div style={{ background: 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: '6px', marginBottom: '10px', fontSize: 'clamp(11px, 1vw, 13px)', color: '#aaa', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px', zIndex: 1 }}>
         <span>Phase: {gs.deepTactics?.phase || 'IDLE'}</span>
         {isReviewFan && <span style={{ color: isActive ? '#4caf50' : '#FFD700' }}>{isActive ? '🟢 YOU ARE DEMONSTRATING' : '👀 Watching'}</span>}
       </div>
 
-      {/* TOOLBAR */}
       {showToolbar && (
         <div style={styles.toolbar}>
           <button onClick={() => handleTool('BALL')} style={selectedTool === 'BALL' ? styles.btnActive : styles.btn}>💥 Ball</button>
@@ -412,7 +406,6 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
         </div>
       )}
 
-      {/* PITCH */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px', minHeight: 0 }}>
         <div ref={pitchRef} style={styles.pitchWrapper} onTouchMove={dragMove} onTouchEnd={dragEnd}>
           <PitchMarkings />
