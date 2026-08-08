@@ -1,4 +1,4 @@
-// src/RefereeDashboard.js - Referee sees EMPTY pitch + places players (FINAL)
+// src/RefereeDashboard.js - Referee sees EMPTY pitch + places players + LIVE DEMO (FINAL)
 import React, { useState, useEffect, useCallback } from 'react';
 
 const STYLES = {
@@ -119,16 +119,24 @@ function RefereePitchView({ formation, slots, title, color, onSpotClick, selecte
   );
 }
 
-function RefereeDashboard({ gs: propGs, gameState, socket, isReferee }) {
+export default function RefereeDashboard({ gs: propGs, gameState, socket, isReferee }) {
   const gs = gameState || propGs || {};
   const [fanSearch, setFanSearch] = useState('');
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [livePitchState, setLivePitchState] = useState({});
 
   const viewersList = Array.isArray(gs.allViewers) ? gs.allViewers : [];
   const team1Players = gs.team1Picks || [];
   const team2Players = gs.team2Picks || [];
   const team1Slots = gs.deepTactics?.pitchState?.team1Slots || [];
   const team2Slots = gs.deepTactics?.pitchState?.team2Slots || [];
+
+  // ── UPDATE LIVE PITCH STATE WHEN GS CHANGES ──
+  useEffect(() => {
+    if (gs?.deepTactics?.pitchState) {
+      setLivePitchState(gs.deepTactics.pitchState);
+    }
+  }, [gs]);
 
   const handleFormationChange = (team, formation) => {
     socket.emit('refSetFormation', { team, formation });
@@ -166,22 +174,41 @@ function RefereeDashboard({ gs: propGs, gameState, socket, isReferee }) {
     <div style={STYLES.container}>
       <div style={STYLES.mainHeader}>
         <span>🧠 Deep Tactics Review — Control Tower</span>
-        <span style={{ fontSize: '0.85rem', background: '#333', padding: '4px 10px', borderRadius: 12, color: '#00f2fe' }}>Phase: {gs.deepTactics?.phase || 'IDLE'}</span>
+        <span style={{ fontSize: '0.85rem', background: '#333', padding: '4px 10px', borderRadius: 12, color: '#00f2fe' }}>
+          Phase: {gs.deepTactics?.phase || 'IDLE'}
+        </span>
       </div>
 
+      {/* ── PLAYER POOL & FORMATION CONTROLS ── */}
       <div style={STYLES.panel}>
         <h3 style={STYLES.header}>👥 Player Pool & Formation Controls</h3>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: '200px', background: '#111', padding: 10, borderRadius: 6 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ color: '#00f2fe', fontSize: '0.85rem', fontWeight: 'bold' }}>🔵 {gs.team1Name || 'Team 1'} ({team1Players.length})</span>
-              <select value={gs.team1Formation || '4-4-2'} onChange={(e) => handleFormationChange('team1', e.target.value)} style={{ ...STYLES.input, width: 'auto', padding: '2px 6px', fontSize: '0.7rem' }}>
+              <select
+                value={gs.team1Formation || '4-4-2'}
+                onChange={(e) => handleFormationChange('team1', e.target.value)}
+                style={{ ...STYLES.input, width: 'auto', padding: '2px 6px', fontSize: '0.7rem' }}
+              >
                 {FORMATIONS.map(f => <option key={f} value={f}>{f}</option>)}
               </select>
             </div>
             <div style={{ marginTop: 8, maxHeight: 120, overflowY: 'auto', display: 'flex', flexWrap: 'wrap', gap: 4 }}>
               {team1Players.map(p => (
-                <div key={p.id} onClick={() => setSelectedPlayer(selectedPlayer === p.id ? null : p.id)} style={{ padding: '4px 8px', borderRadius: 4, background: selectedPlayer === p.id ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.05)', border: selectedPlayer === p.id ? '2px solid #FFD700' : '1px solid #333', fontSize: '10px', cursor: 'pointer', color: '#fff' }}>
+                <div
+                  key={p.id}
+                  onClick={() => setSelectedPlayer(selectedPlayer === p.id ? null : p.id)}
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: 4,
+                    background: selectedPlayer === p.id ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.05)',
+                    border: selectedPlayer === p.id ? '2px solid #FFD700' : '1px solid #333',
+                    fontSize: '10px',
+                    cursor: 'pointer',
+                    color: '#fff',
+                  }}
+                >
                   {p.name} ({p.position})
                 </div>
               ))}
@@ -190,13 +217,29 @@ function RefereeDashboard({ gs: propGs, gameState, socket, isReferee }) {
           <div style={{ flex: 1, minWidth: '200px', background: '#111', padding: 10, borderRadius: 6 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ color: '#ff5252', fontSize: '0.85rem', fontWeight: 'bold' }}>🔴 {gs.team2Name || 'Team 2'} ({team2Players.length})</span>
-              <select value={gs.team2Formation || '4-4-2'} onChange={(e) => handleFormationChange('team2', e.target.value)} style={{ ...STYLES.input, width: 'auto', padding: '2px 6px', fontSize: '0.7rem' }}>
+              <select
+                value={gs.team2Formation || '4-4-2'}
+                onChange={(e) => handleFormationChange('team2', e.target.value)}
+                style={{ ...STYLES.input, width: 'auto', padding: '2px 6px', fontSize: '0.7rem' }}
+              >
                 {FORMATIONS.map(f => <option key={f} value={f}>{f}</option>)}
               </select>
             </div>
             <div style={{ marginTop: 8, maxHeight: 120, overflowY: 'auto', display: 'flex', flexWrap: 'wrap', gap: 4 }}>
               {team2Players.map(p => (
-                <div key={p.id} onClick={() => setSelectedPlayer(selectedPlayer === p.id ? null : p.id)} style={{ padding: '4px 8px', borderRadius: 4, background: selectedPlayer === p.id ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.05)', border: selectedPlayer === p.id ? '2px solid #FFD700' : '1px solid #333', fontSize: '10px', cursor: 'pointer', color: '#fff' }}>
+                <div
+                  key={p.id}
+                  onClick={() => setSelectedPlayer(selectedPlayer === p.id ? null : p.id)}
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: 4,
+                    background: selectedPlayer === p.id ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.05)',
+                    border: selectedPlayer === p.id ? '2px solid #FFD700' : '1px solid #333',
+                    fontSize: '10px',
+                    cursor: 'pointer',
+                    color: '#fff',
+                  }}
+                >
                   {p.name} ({p.position})
                 </div>
               ))}
@@ -210,30 +253,130 @@ function RefereeDashboard({ gs: propGs, gameState, socket, isReferee }) {
         )}
       </div>
 
+      {/* ── REFEREE PITCH VIEW ── */}
       <div style={STYLES.panel}>
         <h3 style={STYLES.header}>⚽ Tactical Pitch — Click empty spots to place selected players</h3>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-          <RefereePitchView formation={gs.team1Formation || '4-4-2'} slots={team1Slots} title={gs.team1Name || "Team 1"} color="#1565c0" onSpotClick={(idx) => handleSpotClick('team1', idx)} selectedPlayer={selectedPlayer} isReferee={true} />
-          <RefereePitchView formation={gs.team2Formation || '4-4-2'} slots={team2Slots} title={gs.team2Name || "Team 2"} color="#b71c1c" onSpotClick={(idx) => handleSpotClick('team2', idx)} selectedPlayer={selectedPlayer} isReferee={true} />
+          <RefereePitchView
+            formation={gs.team1Formation || '4-4-2'}
+            slots={team1Slots}
+            title={gs.team1Name || "Team 1"}
+            color="#1565c0"
+            onSpotClick={(idx) => handleSpotClick('team1', idx)}
+            selectedPlayer={selectedPlayer}
+            isReferee={true}
+          />
+          <RefereePitchView
+            formation={gs.team2Formation || '4-4-2'}
+            slots={team2Slots}
+            title={gs.team2Name || "Team 2"}
+            color="#b71c1c"
+            onSpotClick={(idx) => handleSpotClick('team2', idx)}
+            selectedPlayer={selectedPlayer}
+            isReferee={true}
+          />
         </div>
       </div>
 
+      {/* ── LIVE DEMONSTRATION VIEW (Referee sees what reviewer is doing) ── */}
+      {gs.deepTactics?.phase === 'LIVE_DEMO' && (
+        <div style={{ ...STYLES.panel, border: '2px solid #4caf50', background: '#0a1a0a' }}>
+          <h3 style={{ ...STYLES.header, color: '#4caf50' }}>
+            🔴 LIVE DEMONSTRATION — {gs.deepTactics?.activeDemonstrator?.name || 'Reviewer'}
+          </h3>
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+            <RefereePitchView
+              formation={gs.team1Formation || '4-4-2'}
+              slots={livePitchState.team1Slots || []}
+              title={`${gs.team1Name || 'Team 1'} (Live)`}
+              color="#1565c0"
+              onSpotClick={() => {}}
+              selectedPlayer={null}
+              isReferee={false}
+            />
+            <RefereePitchView
+              formation={gs.team2Formation || '4-4-2'}
+              slots={livePitchState.team2Slots || []}
+              title={`${gs.team2Name || 'Team 2'} (Live)`}
+              color="#b71c1c"
+              onSpotClick={() => {}}
+              selectedPlayer={null}
+              isReferee={false}
+            />
+          </div>
+          <div style={{ fontSize: '0.8rem', color: '#aaa', marginTop: 8, display: 'flex', justifyContent: 'space-between' }}>
+            <span>🔴 Active Demonstrator: {gs.deepTactics?.activeDemonstrator?.name || 'None'}</span>
+            <span>Ball Position: ({Math.round(livePitchState.ballPosition?.x || 50)}%, {Math.round(livePitchState.ballPosition?.y || 50)}%)</span>
+          </div>
+        </div>
+      )}
+
+      {/* ── CONTROLS & ROSTER ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         <div>
           <div style={STYLES.panel}>
             <h3 style={STYLES.header}>⚡ Controls</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <button onClick={() => { if (window.confirm('Start Deep Tactics Review?')) { socket.emit('refInitDeepTactics'); } }} style={STYLES.buttonGold}>🧠 Start Deep Tactics Review</button>
-              <button onClick={() => socket.emit('refOpenDemonstration')} style={{ ...STYLES.button, background: gs.deepTactics?.pitchState?.showDemo ? '#28a745' : '#2c2c54', width: '100%' }}>
+              <button
+                onClick={() => {
+                  if (window.confirm('Start Deep Tactics Review?')) {
+                    socket.emit('refInitDeepTactics');
+                  }
+                }}
+                style={STYLES.buttonGold}
+              >
+                🧠 Start Deep Tactics Review
+              </button>
+              <button
+                onClick={() => socket.emit('refOpenDemonstration')}
+                style={{
+                  ...STYLES.button,
+                  background: gs.deepTactics?.pitchState?.showDemo ? '#28a745' : '#2c2c54',
+                  width: '100%',
+                }}
+              >
                 {gs.deepTactics?.pitchState?.showDemo ? '🔓 Demo Open' : '🔒 Open Demonstration'}
               </button>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <button onClick={() => handleStartDemonstration('first')} style={{ ...STYLES.button, flex: 1, background: gs.deepTactics?.activeDemonstrator?.txId === gs.deepTactics?.firstReviewFan?.txId ? '#28a745' : '#2c2c54' }}>▶️ First Review</button>
-                <button onClick={() => handleStartDemonstration('second')} style={{ ...STYLES.button, flex: 1, background: gs.deepTactics?.activeDemonstrator?.txId === gs.deepTactics?.secondReviewFan?.txId ? '#28a745' : '#2c2c54' }}>▶️ Second Review</button>
+                <button
+                  onClick={() => handleStartDemonstration('first')}
+                  style={{
+                    ...STYLES.button,
+                    flex: 1,
+                    background: gs.deepTactics?.activeDemonstrator?.txId === gs.deepTactics?.firstReviewFan?.txId ? '#28a745' : '#2c2c54',
+                  }}
+                >
+                  ▶️ First Review
+                </button>
+                <button
+                  onClick={() => handleStartDemonstration('second')}
+                  style={{
+                    ...STYLES.button,
+                    flex: 1,
+                    background: gs.deepTactics?.activeDemonstrator?.txId === gs.deepTactics?.secondReviewFan?.txId ? '#28a745' : '#2c2c54',
+                  }}
+                >
+                  ▶️ Second Review
+                </button>
               </div>
-              <button onClick={() => socket.emit('refStopDemonstration')} style={{ ...STYLES.buttonDanger, width: '100%' }}>⏹️ Stop Demonstration</button>
-              <button onClick={() => socket.emit('refNextReview')} style={{ ...STYLES.button, width: '100%' }}>➡️ Next Review</button>
-              <button onClick={handleClearAllReviewers} style={{ ...STYLES.buttonDanger, width: '100%' }}>🗑️ Clear All Reviewers</button>
+              <button
+                onClick={() => socket.emit('refStopDemonstration')}
+                style={{ ...STYLES.buttonDanger, width: '100%' }}
+              >
+                ⏹️ Stop Demonstration
+              </button>
+              <button
+                onClick={() => socket.emit('refNextReview')}
+                style={{ ...STYLES.button, width: '100%' }}
+              >
+                ➡️ Next Review
+              </button>
+              <button
+                onClick={handleClearAllReviewers}
+                style={{ ...STYLES.buttonDanger, width: '100%' }}
+              >
+                🗑️ Clear All Reviewers
+              </button>
             </div>
             <div style={{ marginTop: 12, borderTop: '1px solid #333', paddingTop: 12 }}>
               <div style={STYLES.metaText}>Status:</div>
@@ -244,37 +387,104 @@ function RefereeDashboard({ gs: propGs, gameState, socket, isReferee }) {
           </div>
         </div>
 
+        {/* ── SPECTATOR ROSTER ── */}
         <div style={STYLES.panel}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <h3 style={{ ...STYLES.header, marginBottom: 0 }}>👥 Connected Fans ({viewersList.length})</h3>
-            <input type="text" placeholder="Search..." value={fanSearch} onChange={e => setFanSearch(e.target.value)} style={{ ...STYLES.input, width: '180px', padding: '4px 8px', fontSize: '0.8rem' }} />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={fanSearch}
+              onChange={e => setFanSearch(e.target.value)}
+              style={{ ...STYLES.input, width: '180px', padding: '4px 8px', fontSize: '0.8rem' }}
+            />
           </div>
           <div style={{ maxHeight: '400px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {viewersList.filter(v => !fanSearch || v.name?.toLowerCase().includes(fanSearch.toLowerCase())).map((v) => {
-              const isFirst = gs.deepTactics?.firstReviewFan?.id === v.id;
-              const isSecond = gs.deepTactics?.secondReviewFan?.id === v.id;
-              const isActive = gs.deepTactics?.activeDemonstrator?.id === v.id;
-              return (
-                <div key={v.id} style={{ background: isActive ? 'rgba(76,175,80,0.2)' : isFirst || isSecond ? 'rgba(255,215,0,0.1)' : '#111', padding: '8px 12px', borderRadius: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: isActive ? '1px solid #4caf50' : isFirst || isSecond ? '1px solid #FFD700' : '1px solid #222' }}>
-                  <div><span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{v.name || 'Anonymous Fan'}{isActive && ' 🟢'}{isFirst && ' 🔵'}{isSecond && ' 🔴'}</span><span style={{ fontSize: '0.75rem', marginLeft: '8px', color: v.isVIP ? '#ffc107' : '#888' }}>{v.isVIP ? '⭐ VIP' : 'Fan'}</span></div>
-                  <div style={{ display: 'flex', gap: '4px' }}>
-                    {!isFirst && !isSecond ? (
-                      <>
-                        <button onClick={() => handleAssignReviewFan(v.id, 'first')} style={{ padding: '2px 6px', fontSize: '0.6rem', background: '#1565c0', border: 'none', color: '#fff', borderRadius: 2, cursor: 'pointer' }}>Set First</button>
-                        <button onClick={() => handleAssignReviewFan(v.id, 'second')} style={{ padding: '2px 6px', fontSize: '0.6rem', background: '#b71c1c', border: 'none', color: '#fff', borderRadius: 2, cursor: 'pointer' }}>Set Second</button>
-                      </>
-                    ) : (
-                      <button onClick={() => handleRemoveReviewFan(v.id)} style={{ padding: '2px 6px', fontSize: '0.6rem', background: '#dc3545', border: 'none', color: '#fff', borderRadius: 2, cursor: 'pointer' }}>Remove</button>
-                    )}
+            {viewersList
+              .filter(v => !fanSearch || v.name?.toLowerCase().includes(fanSearch.toLowerCase()))
+              .map((v) => {
+                const isFirst = gs.deepTactics?.firstReviewFan?.id === v.id;
+                const isSecond = gs.deepTactics?.secondReviewFan?.id === v.id;
+                const isActive = gs.deepTactics?.activeDemonstrator?.id === v.id;
+                return (
+                  <div
+                    key={v.id}
+                    style={{
+                      background: isActive ? 'rgba(76,175,80,0.2)' : isFirst || isSecond ? 'rgba(255,215,0,0.1)' : '#111',
+                      padding: '8px 12px',
+                      borderRadius: 4,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      border: isActive ? '1px solid #4caf50' : isFirst || isSecond ? '1px solid #FFD700' : '1px solid #222',
+                    }}
+                  >
+                    <div>
+                      <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
+                        {v.name || 'Anonymous Fan'}
+                        {isActive && ' 🟢'}
+                        {isFirst && ' 🔵'}
+                        {isSecond && ' 🔴'}
+                      </span>
+                      <span style={{ fontSize: '0.75rem', marginLeft: '8px', color: v.isVIP ? '#ffc107' : '#888' }}>
+                        {v.isVIP ? '⭐ VIP' : 'Fan'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      {!isFirst && !isSecond ? (
+                        <>
+                          <button
+                            onClick={() => handleAssignReviewFan(v.id, 'first')}
+                            style={{
+                              padding: '2px 6px',
+                              fontSize: '0.6rem',
+                              background: '#1565c0',
+                              border: 'none',
+                              color: '#fff',
+                              borderRadius: 2,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Set First
+                          </button>
+                          <button
+                            onClick={() => handleAssignReviewFan(v.id, 'second')}
+                            style={{
+                              padding: '2px 6px',
+                              fontSize: '0.6rem',
+                              background: '#b71c1c',
+                              border: 'none',
+                              color: '#fff',
+                              borderRadius: 2,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Set Second
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => handleRemoveReviewFan(v.id)}
+                          style={{
+                            padding: '2px 6px',
+                            fontSize: '0.6rem',
+                            background: '#dc3545',
+                            border: 'none',
+                            color: '#fff',
+                            borderRadius: 2,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
           </div>
         </div>
       </div>
     </div>
   );
 }
-
-export default RefereeDashboard;
