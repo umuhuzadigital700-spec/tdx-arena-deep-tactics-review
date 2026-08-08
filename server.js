@@ -140,7 +140,6 @@ function parseCSV(text) {
 setInterval(async () => {
   const loaded = await loadPickedPlayers();
   if (loaded) {
-    // Only update available pools, NOT the pitch slots
     broadcast();
   }
 }, 60000);
@@ -285,7 +284,6 @@ io.on('connection', (socket) => {
   socket.on('refInitDeepTactics', () => {
     state.deepTactics.active = true;
     state.deepTactics.phase = 'ASSIGNING';
-    // Ensure all slots are EMPTY
     state.deepTactics.pitchState.team1Slots = new Array(11).fill(null);
     state.deepTactics.pitchState.team2Slots = new Array(11).fill(null);
     state.deepTactics.pitchState.ballPosition = { x: 50, y: 50 };
@@ -357,7 +355,7 @@ io.on('connection', (socket) => {
     state.deepTactics.phase = 'LIVE_DEMO';
     broadcast();
     io.emit('deepTacticsState', state.deepTactics);
-    // Notify the specific fan that they have control
+    // Send control to the active fan
     io.to(fan.id).emit('demonstrationControl', { hasControl: true });
   });
 
@@ -376,21 +374,30 @@ io.on('connection', (socket) => {
     io.emit('deepTacticsState', state.deepTactics);
   });
 
+  // ── FIXED: NEXT REVIEW - Immediate control transfer ──
   socket.on('refNextReview', () => {
     if (!state.deepTactics.active) return;
+    
     const current = state.deepTactics.activeDemonstrator;
     const nextFan = state.deepTactics.secondReviewFan;
+    
     if (nextFan && (!current || String(current.txId) !== String(nextFan.txId))) {
-      // Release current
+      // ── Release current demonstrator ──
       if (current) {
         io.to(current.id).emit('demonstrationControl', { hasControl: false });
       }
+      
+      // ── Give FULL CONTROL to next fan immediately ──
       state.deepTactics.activeDemonstrator = nextFan;
       state.deepTactics.pitchState.selectedSpots = [];
       state.deepTactics.pitchState.animationQueue = [];
       state.deepTactics.pitchState.isAnimating = false;
-      // Give control to next
+      state.deepTactics.phase = 'LIVE_DEMO';
+      
+      // ── Send control signal to next fan ──
       io.to(nextFan.id).emit('demonstrationControl', { hasControl: true });
+      
+      // ── Broadcast state to ALL clients ──
       broadcast();
       io.emit('deepTacticsState', state.deepTactics);
       io.emit('reviewHandoff', { newDemonstrator: nextFan.name });
