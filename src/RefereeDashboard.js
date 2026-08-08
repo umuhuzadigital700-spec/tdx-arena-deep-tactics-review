@@ -1,4 +1,4 @@
-// src/RefereeDashboard.js - Referee sees EXACTLY what reviewer sees (FIXED)
+// src/RefereeDashboard.js - Referee Dashboard (FULLY WORKING)
 import React, { useState, useEffect, useCallback } from 'react';
 
 const STYLES = {
@@ -17,40 +17,43 @@ const FORMATIONS = ['4-4-2', '4-3-3', '3-5-2', '4-5-1', '5-3-2', '4-2-3-1'];
 
 const FORMATION_SLOTS = {
   '4-4-2': [
-    { label: 'GK', top: 88, left: 50 }, { label: 'LB', top: 70, left: 15 }, { label: 'CB1', top: 70, left: 35 }, { label: 'CB2', top: 70, left: 65 }, { label: 'RB', top: 70, left: 85 },
-    { label: 'LM', top: 50, left: 15 }, { label: 'CM1', top: 50, left: 35 }, { label: 'CM2', top: 50, left: 65 }, { label: 'RM', top: 50, left: 85 },
-    { label: 'ST1', top: 25, left: 35 }, { label: 'ST2', top: 25, left: 65 }
+    { label: 'ST1', top: 10, left: 35 }, { label: 'ST2', top: 10, left: 65 },
+    { label: 'LM', top: 30, left: 15 }, { label: 'CM1', top: 30, left: 35 }, { label: 'CM2', top: 30, left: 65 }, { label: 'RM', top: 30, left: 85 },
+    { label: 'LB', top: 55, left: 15 }, { label: 'CB1', top: 55, left: 35 }, { label: 'CB2', top: 55, left: 65 }, { label: 'RB', top: 55, left: 85 },
+    { label: 'GK', top: 85, left: 50 },
   ],
   '4-3-3': [
-    { label: 'GK', top: 88, left: 50 }, { label: 'LB', top: 70, left: 15 }, { label: 'CB1', top: 70, left: 35 }, { label: 'CB2', top: 70, left: 65 }, { label: 'RB', top: 70, left: 85 },
-    { label: 'CM1', top: 50, left: 25 }, { label: 'CM2', top: 50, left: 50 }, { label: 'CM3', top: 50, left: 75 },
-    { label: 'LW', top: 20, left: 20 }, { label: 'ST', top: 15, left: 50 }, { label: 'RW', top: 20, left: 80 }
+    { label: 'LW', top: 8, left: 15 }, { label: 'ST', top: 8, left: 50 }, { label: 'RW', top: 8, left: 85 },
+    { label: 'CM1', top: 30, left: 25 }, { label: 'CM2', top: 30, left: 50 }, { label: 'CM3', top: 30, left: 75 },
+    { label: 'LB', top: 55, left: 15 }, { label: 'CB1', top: 55, left: 35 }, { label: 'CB2', top: 55, left: 65 }, { label: 'RB', top: 55, left: 85 },
+    { label: 'GK', top: 85, left: 50 },
   ],
   '3-5-2': [
-    { label: 'GK', top: 88, left: 50 }, { label: 'CB1', top: 70, left: 25 }, { label: 'CB2', top: 70, left: 50 }, { label: 'CB3', top: 70, left: 75 },
-    { label: 'LWB', top: 52, left: 10 }, { label: 'CM1', top: 50, left: 30 }, { label: 'CM2', top: 50, left: 50 }, { label: 'CM3', top: 50, left: 70 }, { label: 'RWB', top: 52, left: 90 },
-    { label: 'ST1', top: 22, left: 35 }, { label: 'ST2', top: 22, left: 65 }
+    { label: 'ST1', top: 10, left: 35 }, { label: 'ST2', top: 10, left: 65 },
+    { label: 'LWB', top: 25, left: 10 }, { label: 'CM1', top: 30, left: 30 }, { label: 'CM2', top: 30, left: 50 }, { label: 'CM3', top: 30, left: 70 }, { label: 'RWB', top: 25, left: 90 },
+    { label: 'CB1', top: 55, left: 25 }, { label: 'CB2', top: 55, left: 50 }, { label: 'CB3', top: 55, left: 75 },
+    { label: 'GK', top: 85, left: 50 },
   ],
   '4-5-1': [
-    { label: 'GK', top: 88, left: 50 }, { label: 'LB', top: 70, left: 15 }, { label: 'CB1', top: 70, left: 35 }, { label: 'CB2', top: 70, left: 65 }, { label: 'RB', top: 70, left: 85 },
-    { label: 'LM', top: 50, left: 10 }, { label: 'CM1', top: 50, left: 30 }, { label: 'CM2', top: 50, left: 50 }, { label: 'CM3', top: 50, left: 70 }, { label: 'RM', top: 50, left: 90 },
-    { label: 'ST', top: 18, left: 50 }
+    { label: 'ST', top: 10, left: 50 },
+    { label: 'LM', top: 25, left: 10 }, { label: 'CM1', top: 30, left: 30 }, { label: 'CM2', top: 30, left: 50 }, { label: 'CM3', top: 30, left: 70 }, { label: 'RM', top: 25, left: 90 },
+    { label: 'LB', top: 55, left: 15 }, { label: 'CB1', top: 55, left: 35 }, { label: 'CB2', top: 55, left: 65 }, { label: 'RB', top: 55, left: 85 },
+    { label: 'GK', top: 85, left: 50 },
   ],
   '5-3-2': [
-    { label: 'GK', top: 88, left: 50 }, { label: 'LWB', top: 68, left: 10 }, { label: 'CB1', top: 70, left: 28 }, { label: 'CB2', top: 70, left: 50 }, { label: 'CB3', top: 70, left: 72 }, { label: 'RWB', top: 68, left: 90 },
-    { label: 'CM1', top: 48, left: 25 }, { label: 'CM2', top: 48, left: 50 }, { label: 'CM3', top: 48, left: 75 },
-    { label: 'ST1', top: 22, left: 35 }, { label: 'ST2', top: 22, left: 65 }
+    { label: 'ST1', top: 10, left: 35 }, { label: 'ST2', top: 10, left: 65 },
+    { label: 'CM1', top: 30, left: 25 }, { label: 'CM2', top: 30, left: 50 }, { label: 'CM3', top: 30, left: 75 },
+    { label: 'LWB', top: 55, left: 10 }, { label: 'CB1', top: 55, left: 28 }, { label: 'CB2', top: 55, left: 50 }, { label: 'CB3', top: 55, left: 72 }, { label: 'RWB', top: 55, left: 90 },
+    { label: 'GK', top: 85, left: 50 },
   ],
   '4-2-3-1': [
-    { label: 'GK', top: 88, left: 50 }, { label: 'LB', top: 72, left: 15 }, { label: 'CB1', top: 72, left: 35 }, { label: 'CB2', top: 72, left: 65 }, { label: 'RB', top: 72, left: 85 },
-    { label: 'DM1', top: 57, left: 35 }, { label: 'DM2', top: 57, left: 65 },
-    { label: 'LAM', top: 38, left: 20 }, { label: 'CAM', top: 35, left: 50 }, { label: 'RAM', top: 38, left: 80 },
-    { label: 'ST', top: 18, left: 50 }
+    { label: 'ST', top: 10, left: 50 },
+    { label: 'LAM', top: 22, left: 20 }, { label: 'CAM', top: 22, left: 50 }, { label: 'RAM', top: 22, left: 80 },
+    { label: 'DM1', top: 35, left: 35 }, { label: 'DM2', top: 35, left: 65 },
+    { label: 'LB', top: 55, left: 15 }, { label: 'CB1', top: 55, left: 35 }, { label: 'CB2', top: 55, left: 65 }, { label: 'RB', top: 55, left: 85 },
+    { label: 'GK', top: 85, left: 50 },
   ]
 };
-
-// ── LIVE PITCH VIEW (EXACTLY what reviewer sees, with correct orientation) ──
-// Replace the existing LivePitchView function with this:
 
 function LivePitchView({ formation, slots, title, color }) {
   const slotDefs = FORMATION_SLOTS[formation] || FORMATION_SLOTS['4-4-2'];
@@ -73,9 +76,7 @@ function LivePitchView({ formation, slots, title, color }) {
         
         {slotDefs.map((s, idx) => {
           const player = slots && slots[idx];
-          const isEmpty = !player;
           const displayName = player ? player.name : s.label;
-          // ── For Team 2, flip the position vertically ──
           const topPos = isFlipped ? (100 - s.top) : s.top;
           
           return (
@@ -128,7 +129,7 @@ function LivePitchView({ formation, slots, title, color }) {
     </div>
   );
 }
-// ── REFEREE PITCH VIEW (for placing players) ──
+
 function RefereePitchView({ formation, slots, title, color, onSpotClick, selectedPlayer, isReferee }) {
   const slotDefs = FORMATION_SLOTS[formation] || FORMATION_SLOTS['4-4-2'];
   
@@ -224,7 +225,6 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
   const team1Slots = gs.deepTactics?.pitchState?.team1Slots || [];
   const team2Slots = gs.deepTactics?.pitchState?.team2Slots || [];
 
-  // ── UPDATE LIVE PITCH STATE WHEN GS CHANGES ──
   useEffect(() => {
     if (gs?.deepTactics?.pitchState) {
       setLivePitchState(gs.deepTactics.pitchState);
@@ -263,7 +263,6 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
 
   if (!isReferee) return null;
 
-  // ── Get live team names with formation ──
   const liveFormation1 = gs.team1Formation || '4-4-2';
   const liveFormation2 = gs.team2Formation || '4-4-2';
 
@@ -276,7 +275,6 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
         </span>
       </div>
 
-      {/* ── PLAYER POOL & FORMATION CONTROLS ── */}
       <div style={STYLES.panel}>
         <h3 style={STYLES.header}>👥 Player Pool & Formation Controls</h3>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
@@ -350,7 +348,6 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
         )}
       </div>
 
-      {/* ── REFEREE PITCH VIEW ── */}
       <div style={STYLES.panel}>
         <h3 style={STYLES.header}>⚽ Setup Pitch — Place players on empty spots</h3>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
@@ -375,7 +372,6 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
         </div>
       </div>
 
-      {/* ── LIVE DEMONSTRATION VIEW (EXACTLY what reviewer sees) ── */}
       {gs.deepTactics?.phase === 'LIVE_DEMO' && (
         <div style={{ ...STYLES.panel, border: '2px solid #4caf50', background: '#0a1a0a' }}>
           <h3 style={{ ...STYLES.header, color: '#4caf50' }}>
@@ -402,7 +398,6 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
         </div>
       )}
 
-      {/* ── CONTROLS & ROSTER ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         <div>
           <div style={STYLES.panel}>
@@ -478,7 +473,6 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
           </div>
         </div>
 
-        {/* ── SPECTATOR ROSTER ── */}
         <div style={STYLES.panel}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <h3 style={{ ...STYLES.header, marginBottom: 0 }}>👥 Connected Fans ({viewersList.length})</h3>
