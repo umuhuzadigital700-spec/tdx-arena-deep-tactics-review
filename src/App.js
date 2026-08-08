@@ -5,7 +5,7 @@ import RefereeDashboard from './RefereeDashboard';
 import DeepTacticsReview from './DeepTacticsReview';
 import { imageCache, CachedImage } from './imageCache';
 
-const BACKEND_URL = window.location.origin; // Auto-detects Railway URL
+const BACKEND_URL = window.location.origin;
 
 const socket = io(BACKEND_URL, {
   transports: ['polling', 'websocket'],
@@ -272,14 +272,51 @@ export default function App() {
   useEffect(() => {
     socket.on('connect', () => setConnected(true));
     socket.on('disconnect', () => setConnected(false));
-    socket.on('gameStateUpdate', (data) => setGs(data));
+    socket.on('gameStateUpdate', (data) => {
+      console.log('📡 Game state updated:', data);
+      setGs(data);
+    });
     socket.on('refConfirm', (ok) => { if (ok) setRefOk(true); });
     socket.on('loginError', (err) => alert(err.message || 'Login Error'));
     
+    // ── DEEP TACTICS STATE LISTENER ──
     socket.on('deepTacticsState', (data) => {
+      console.log('🧠 Deep Tactics state updated:', data);
       if (data && data.deepTactics) {
-        setGs(prev => ({ ...prev, deepTactics: data.deepTactics }));
+        setGs(prev => {
+          const newState = { 
+            ...prev, 
+            deepTactics: data.deepTactics,
+            // Preserve team formations and picks
+            team1Formation: data.team1Formation || prev?.team1Formation || '4-4-2',
+            team2Formation: data.team2Formation || prev?.team2Formation || '4-4-2',
+            team1Picks: data.team1Picks || prev?.team1Picks || [],
+            team2Picks: data.team2Picks || prev?.team2Picks || [],
+          };
+          console.log('🔄 Updated state:', newState);
+          return newState;
+        });
       }
+    });
+
+    // ── FORMATION UPDATED LISTENER ──
+    socket.on('formationUpdated', ({ team, formation }) => {
+      console.log(`📐 Formation updated: ${team} → ${formation}`);
+      setGs(prev => {
+        const newState = { ...prev };
+        if (team === 'team1') {
+          newState.team1Formation = formation;
+        } else if (team === 'team2') {
+          newState.team2Formation = formation;
+        }
+        return newState;
+      });
+    });
+
+    // ── REVIEW HANDOFF LISTENER ──
+    socket.on('reviewHandoff', ({ newDemonstrator }) => {
+      console.log(`🔄 Review handed off to: ${newDemonstrator}`);
+      // You could add a notification here
     });
 
     return () => {
@@ -289,6 +326,8 @@ export default function App() {
       socket.off('refConfirm');
       socket.off('loginError');
       socket.off('deepTacticsState');
+      socket.off('formationUpdated');
+      socket.off('reviewHandoff');
     };
   }, []);
 
@@ -361,17 +400,17 @@ export default function App() {
           🧠 Deep Tactics Review
         </div>
         <div style={{ fontSize: 13, color: '#aaa', marginTop: 8 }}>
-          Waiting for the referee to start the demonstration...
+          {gs?.deepTactics?.phase === 'LIVE_DEMO' ? '🔴 Live Demonstration in Progress' : 'Waiting for the referee to start...'}
         </div>
         <div style={{ fontSize: 12, color: '#888', marginTop: 8 }}>
-          {gs?.deepTactics?.phase || 'IDLE'}
+          Phase: {gs?.deepTactics?.phase || 'IDLE'}
           {gs?.deepTactics?.activeDemonstrator?.name && (
             <span> — Active: {gs.deepTactics.activeDemonstrator.name}</span>
           )}
         </div>
       </div>
 
-      {/* Deep Tactics Review Overlay for Fans */}
+      {/* ── DEEP TACTICS REVIEW OVERLAY FOR FANS ── */}
       {showDeepTactics && (
         <DeepTacticsReview
           gameState={gs}
@@ -381,7 +420,7 @@ export default function App() {
             setShowDeepTactics(false);
             window._toggleDeepTactics = null;
           }}
-          isReferee={user?.role === 'referee'}
+          isReferee={false}
           isReviewFan={gs?.deepTactics?.firstReviewFan?.txId === user?.txId ||
             gs?.deepTactics?.secondReviewFan?.txId === user?.txId}
           reviewRole={
