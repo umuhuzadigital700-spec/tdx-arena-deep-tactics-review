@@ -11,6 +11,8 @@ const STYLES = {
   badge: { position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: '50%' },
   button: { padding: '10px 16px', background: '#2c2c54', color: '#fff', border: '1px solid #444', borderRadius: 4, fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease' },
   buttonGold: { padding: '10px 16px', background: 'linear-gradient(135deg, #FFD700, #FFA500)', color: '#000', border: 'none', borderRadius: 4, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s ease' },
+  buttonDanger: { padding: '10px 16px', background: '#dc3545', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s ease' },
+  buttonSuccess: { padding: '10px 16px', background: '#28a745', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s ease' },
   input: { padding: '8px 12px', borderRadius: 4, border: '1px solid #555', background: '#222', color: '#fff', fontSize: '0.9rem', width: '100%', boxSizing: 'border-box' },
   metaText: { fontSize: '0.85rem', color: '#aaa', margin: '4px 0' }
 };
@@ -51,29 +53,120 @@ const FORMATION_SLOTS = {
 };
 const FORMATIONS = Object.keys(FORMATION_SLOTS);
 
-function RefPitchView({ formation, tactics, title, color }) {
-  const slots = FORMATION_SLOTS[formation] || FORMATION_SLOTS['4-4-2'];
+// ── PITCH VIEW WITH CLICKABLE SPOTS ──
+function ClickablePitchView({ formation, slots, title, color, onSpotClick, selectedPlayer, isReferee }) {
+  const slotDefs = FORMATION_SLOTS[formation] || FORMATION_SLOTS['4-4-2'];
+  
   return (
     <div style={{ flex: 1, minWidth: '240px', background: '#111', border: '1px solid #333', padding: 12, borderRadius: 8 }}>
       <div style={{ fontSize: 13, fontWeight: 'bold', color, marginBottom: 8, textTransform: 'uppercase' }}>{title} ({formation})</div>
-      <div style={{ position: 'relative', width: '100%', paddingTop: '130%', background: 'linear-gradient(180deg, #1b4d22 0%, #0f3014 100%)', border: '1px solid #444', borderRadius: 6, overflow: 'hidden' }}>
-        {slots.map((s, idx) => {
-          const card = tactics[idx];
+      <div style={{ 
+        position: 'relative', 
+        width: '100%', 
+        paddingTop: '130%', 
+        background: 'linear-gradient(180deg, #1b4d22 0%, #0f3014 100%)', 
+        border: '1px solid #444', 
+        borderRadius: 6, 
+        overflow: 'hidden' 
+      }}>
+        {slotDefs.map((s, idx) => {
+          const card = slots && slots[idx];
+          const isEmpty = !card;
+          const isSelected = selectedPlayer !== null;
+          
           return (
-            <div key={idx} style={{ position: 'absolute', top: `${s.top}%`, left: `${s.left}%`, transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
-              <div style={{ width: 36, height: 36, borderRadius: '50%', background: card ? color : 'rgba(255,255,255,0.08)', border: '1px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 7, fontWeight: 'bold', color: '#fff', padding: 2, boxSizing: 'border-box', overflow: 'hidden', wordBreak: 'break-all' }}>
+            <div 
+              key={idx} 
+              onClick={() => {
+                if (isReferee && isSelected && onSpotClick) {
+                  onSpotClick(idx);
+                }
+              }}
+              style={{ 
+                position: 'absolute', 
+                top: `${s.top}%`, 
+                left: `${s.left}%`, 
+                transform: 'translate(-50%, -50%)', 
+                textAlign: 'center',
+                cursor: isReferee && isSelected ? 'pointer' : 'default',
+              }}
+            >
+              <div style={{ 
+                width: 36, 
+                height: 36, 
+                borderRadius: '50%', 
+                background: card ? color : 'rgba(255,255,255,0.08)', 
+                border: isReferee && isSelected && isEmpty ? '2px dashed #FFD700' : card ? '2px solid #fff' : '1px solid rgba(255,255,255,0.2)',
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                fontSize: 7, 
+                fontWeight: 'bold', 
+                color: '#fff', 
+                padding: 2, 
+                boxSizing: 'border-box', 
+                overflow: 'hidden', 
+                wordBreak: 'break-all',
+                transition: 'all 0.2s ease',
+                boxShadow: isReferee && isSelected && isEmpty ? '0 0 20px rgba(255,215,0,0.3)' : 'none',
+              }}>
                 {card ? card.name : s.label}
               </div>
+              {isReferee && isSelected && isEmpty && (
+                <div style={{ fontSize: 6, color: '#FFD700', marginTop: 2 }}>
+                  Tap to place
+                </div>
+              )}
             </div>
           );
         })}
+        
+        {/* Ball */}
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 16,
+          height: 16,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle at 30% 30%, #fff, #ddd)',
+          boxShadow: '0 0 20px rgba(255,255,255,0.3)',
+          zIndex: 10,
+          pointerEvents: 'none',
+          border: '2px solid #555',
+        }}>
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 4,
+            height: 4,
+            borderRadius: '50%',
+            background: '#222',
+          }} />
+        </div>
+        
+        {/* Center circle */}
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 50,
+          height: 50,
+          borderRadius: '50%',
+          border: '1px solid rgba(255,255,255,0.15)',
+          pointerEvents: 'none',
+        }} />
       </div>
     </div>
   );
 }
 
 // ── PLAYER POOL COMPONENT ──
-function PlayerPool({ players, onSelectPlayer, selectedPlayer, onPlacePlayer }) {
+function PlayerPool({ players, onSelectPlayer, selectedPlayer }) {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredPlayers = players.filter(p =>
@@ -94,15 +187,16 @@ function PlayerPool({ players, onSelectPlayer, selectedPlayer, onPlacePlayer }) 
         {filteredPlayers.map(player => (
           <div
             key={player.id}
-            onClick={() => onSelectPlayer(player.id)}
+            onClick={() => onSelectPlayer(selectedPlayer === player.id ? null : player.id)}
             style={{
               padding: '4px 8px',
               borderRadius: 4,
-              background: selectedPlayer === player.id ? 'rgba(255,215,0,0.2)' : 'rgba(255,255,255,0.05)',
-              border: selectedPlayer === player.id ? '1px solid #FFD700' : '1px solid #333',
+              background: selectedPlayer === player.id ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.05)',
+              border: selectedPlayer === player.id ? '2px solid #FFD700' : '1px solid #333',
               fontSize: 10,
               cursor: 'pointer',
               color: '#fff',
+              transition: 'all 0.2s ease',
             }}
           >
             {player.name} ({player.position})
@@ -111,7 +205,7 @@ function PlayerPool({ players, onSelectPlayer, selectedPlayer, onPlacePlayer }) 
       </div>
       {selectedPlayer && (
         <div style={{ fontSize: 11, color: '#FFD700', marginTop: 4, padding: '4px 8px', background: 'rgba(255,215,0,0.1)', borderRadius: 4 }}>
-          ℹ️ Tap a spot on the pitch to place {players.find(p => p.id === selectedPlayer)?.name}
+          ℹ️ Tap an empty spot on the pitch to place {players.find(p => p.id === selectedPlayer)?.name}
         </div>
       )}
     </div>
@@ -129,9 +223,18 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
   const team1Players = gs.team1Picks || [];
   const team2Players = gs.team2Picks || [];
 
+  // ── GET PITCH SLOTS ──
+  const team1Slots = gs.deepTactics?.pitchState?.team1Slots || [];
+  const team2Slots = gs.deepTactics?.pitchState?.team2Slots || [];
+
   // ── HANDLE SPOT CLICK FOR PLAYER PLACEMENT ──
   const handleSpotClick = (half, slotIndex) => {
     if (!selectedPlayer) return;
+    const halfSlots = half === 'team1' ? team1Slots : team2Slots;
+    if (halfSlots[slotIndex]) {
+      // Spot is occupied - don't allow placement
+      return;
+    }
     socket.emit('refPlacePlayerOnPitch', { half, slotIndex, playerId: selectedPlayer });
     setSelectedPlayer(null);
   };
@@ -151,6 +254,20 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
     socket.emit('refRemoveReviewFan', { userId: viewerId });
   };
 
+  // ── HANDLE CLEAR ALL REVIEWERS ──
+  const handleClearAllReviewers = () => {
+    if (window.confirm('Remove ALL assigned reviewers?')) {
+      if (gs.deepTactics?.firstReviewFan) {
+        socket.emit('refRemoveReviewFan', { userId: gs.deepTactics.firstReviewFan.id });
+      }
+      if (gs.deepTactics?.secondReviewFan) {
+        socket.emit('refRemoveReviewFan', { userId: gs.deepTactics.secondReviewFan.id });
+      }
+      // Also stop active demonstration
+      socket.emit('refStopDemonstration');
+    }
+  };
+
   // ── HANDLE START DEMONSTRATION BY ROLE ──
   const handleStartDemonstration = (role) => {
     socket.emit('refStartDemonstration', { role });
@@ -167,9 +284,9 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
         </span>
       </div>
 
-      {/* ── PITCH OVERVIEW WITH FORMATION CONTROLS ── */}
+      {/* ── PLAYER POOL & FORMATION CONTROLS ── */}
       <div style={STYLES.panel}>
-        <h3 style={STYLES.header}>👁️ Live Tactical Pitch Overview</h3>
+        <h3 style={STYLES.header}>👥 Player Pool & Formation Controls</h3>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
           {/* Team 1 */}
           <div style={{ flex: 1, minWidth: '200px', background: '#111', padding: 10, borderRadius: 6 }}>
@@ -195,7 +312,7 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ color: '#ff5252', fontSize: '0.85rem', fontWeight: 'bold' }}>🔴 {gs.team2Name || 'Team 2'} ({team2Players.length})</span>
               <select
-                value={gs.team2Formation || '4-4-2'}
+                value={gs.team2Formulation || '4-4-2'}
                 onChange={(e) => handleFormationChange('team2', e.target.value)}
                 style={{ ...STYLES.input, width: 'auto', padding: '2px 6px', fontSize: '0.7rem' }}
               >
@@ -209,18 +326,29 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
             />
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginTop: '12px' }}>
-          <RefPitchView
+      </div>
+
+      {/* ── PITCH VIEW WITH CLICKABLE SPOTS ── */}
+      <div style={STYLES.panel}>
+        <h3 style={STYLES.header}>⚽ Tactical Pitch — Click empty spots to place selected players</h3>
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+          <ClickablePitchView
             formation={gs.team1Formation || '4-4-2'}
-            tactics={gs.deepTactics?.pitchState?.team1Slots || {}}
+            slots={team1Slots}
             title={gs.team1Name || "Team 1"}
             color="#1565c0"
+            onSpotClick={(idx) => handleSpotClick('team1', idx)}
+            selectedPlayer={selectedPlayer}
+            isReferee={true}
           />
-          <RefPitchView
+          <ClickablePitchView
             formation={gs.team2Formation || '4-4-2'}
-            tactics={gs.deepTactics?.pitchState?.team2Slots || {}}
+            slots={team2Slots}
             title={gs.team2Name || "Team 2"}
             color="#b71c1c"
+            onSpotClick={(idx) => handleSpotClick('team2', idx)}
+            selectedPlayer={selectedPlayer}
+            isReferee={true}
           />
         </div>
       </div>
@@ -249,7 +377,7 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
                 onClick={() => socket.emit('refOpenDemonstration')}
                 style={{
                   ...STYLES.button,
-                  background: gs.deepTactics?.pitchState?.showDemo ? '#4caf50' : '#222',
+                  background: gs.deepTactics?.pitchState?.showDemo ? '#28a745' : '#2c2c54',
                   width: '100%',
                 }}
               >
@@ -262,7 +390,7 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
                   style={{
                     ...STYLES.button,
                     flex: 1,
-                    background: gs.deepTactics?.activeDemonstrator?.txId === gs.deepTactics?.firstReviewFan?.txId ? '#4caf50' : '#2c2c54',
+                    background: gs.deepTactics?.activeDemonstrator?.txId === gs.deepTactics?.firstReviewFan?.txId ? '#28a745' : '#2c2c54',
                   }}
                 >
                   ▶️ First Review
@@ -272,7 +400,7 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
                   style={{
                     ...STYLES.button,
                     flex: 1,
-                    background: gs.deepTactics?.activeDemonstrator?.txId === gs.deepTactics?.secondReviewFan?.txId ? '#4caf50' : '#2c2c54',
+                    background: gs.deepTactics?.activeDemonstrator?.txId === gs.deepTactics?.secondReviewFan?.txId ? '#28a745' : '#2c2c54',
                   }}
                 >
                   ▶️ Second Review
@@ -281,7 +409,7 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
 
               <button
                 onClick={() => socket.emit('refStopDemonstration')}
-                style={{ ...STYLES.button, background: '#dc3545', width: '100%' }}
+                style={{ ...STYLES.buttonDanger, width: '100%' }}
               >
                 ⏹️ Stop Demonstration
               </button>
@@ -291,6 +419,13 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
                 style={{ ...STYLES.button, width: '100%' }}
               >
                 ➡️ Next Review
+              </button>
+
+              <button
+                onClick={handleClearAllReviewers}
+                style={{ ...STYLES.buttonDanger, width: '100%' }}
+              >
+                🗑️ Clear All Reviewers
               </button>
             </div>
 
@@ -386,7 +521,7 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
       {window._toggleDeepTactics && (
         <div style={{ marginTop: 16, padding: 16, background: 'rgba(255,215,0,0.05)', borderRadius: 8, border: '1px solid rgba(255,215,0,0.2)' }}>
           <p style={{ color: '#aaa', fontSize: '0.85rem', textAlign: 'center' }}>
-            🔄 Deep Tactics Review overlay is available. It will open automatically when fans are assigned.
+            🔄 Deep Tactics Review overlay will open automatically when fans are assigned and demonstration starts.
           </p>
         </div>
       )}
