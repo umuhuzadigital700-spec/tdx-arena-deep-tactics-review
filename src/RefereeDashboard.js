@@ -1,4 +1,4 @@
-// src/RefereeDashboard.js - Referee sees EMPTY pitch + places players + LIVE DEMO (FINAL)
+// src/RefereeDashboard.js - Referee sees EXACTLY what reviewer sees (FIXED)
 import React, { useState, useEffect, useCallback } from 'react';
 
 const STYLES = {
@@ -49,6 +49,83 @@ const FORMATION_SLOTS = {
   ]
 };
 
+// ── LIVE PITCH VIEW (EXACTLY what reviewer sees) ──
+function LivePitchView({ formation, slots, title, color }) {
+  const slotDefs = FORMATION_SLOTS[formation] || FORMATION_SLOTS['4-4-2'];
+  const isFlipped = title.includes('Team 2');
+  
+  return (
+    <div style={{ flex: 1, minWidth: '240px', background: '#111', border: '1px solid #333', padding: 12, borderRadius: 8 }}>
+      <div style={{ fontSize: 13, fontWeight: 'bold', color, marginBottom: 8, textTransform: 'uppercase' }}>{title}</div>
+      <div style={{ 
+        position: 'relative', 
+        width: '100%', 
+        paddingTop: '130%', 
+        background: 'linear-gradient(180deg, #1b4d22 0%, #0f3014 100%)', 
+        border: '1px solid #444', 
+        borderRadius: 6, 
+        overflow: 'hidden' 
+      }}>
+        <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 1, background: 'rgba(255,255,255,0.15)' }} />
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 50, height: 50, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)' }} />
+        
+        {slotDefs.map((s, idx) => {
+          const player = slots && slots[idx];
+          const isEmpty = !player;
+          const displayName = player ? player.name : s.label;
+          
+          return (
+            <div 
+              key={idx} 
+              style={{ 
+                position: 'absolute', 
+                top: `${s.top}%`, 
+                left: `${s.left}%`, 
+                transform: 'translate(-50%, -50%)', 
+                textAlign: 'center',
+              }}
+            >
+              <div style={{ 
+                width: 36, 
+                height: 36, 
+                borderRadius: '50%', 
+                background: player ? color : 'rgba(255,255,255,0.08)', 
+                border: player ? '2px solid #fff' : '1px solid rgba(255,255,255,0.2)',
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                fontSize: 7, 
+                fontWeight: 'bold', 
+                color: '#fff', 
+                padding: 2, 
+                boxSizing: 'border-box', 
+                overflow: 'hidden', 
+                wordBreak: 'break-word',
+                transition: 'all 0.2s ease',
+              }}>
+                <span style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%',
+                  height: '100%',
+                  fontSize: player ? '7px' : '6px',
+                  lineHeight: '1.1',
+                  textAlign: 'center',
+                  wordBreak: 'break-word',
+                }}>
+                  {displayName}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── REFEREE PITCH VIEW (for placing players) ──
 function RefereePitchView({ formation, slots, title, color, onSpotClick, selectedPlayer, isReferee }) {
   const slotDefs = FORMATION_SLOTS[formation] || FORMATION_SLOTS['4-4-2'];
   
@@ -71,6 +148,7 @@ function RefereePitchView({ formation, slots, title, color, onSpotClick, selecte
           const card = slots && slots[idx];
           const isEmpty = !card;
           const isSelected = selectedPlayer !== null && isEmpty;
+          const displayName = card ? card.name : s.label;
           
           return (
             <div 
@@ -104,11 +182,23 @@ function RefereePitchView({ formation, slots, title, color, onSpotClick, selecte
                 padding: 2, 
                 boxSizing: 'border-box', 
                 overflow: 'hidden', 
-                wordBreak: 'break-all',
+                wordBreak: 'break-word',
                 transition: 'all 0.2s ease',
                 boxShadow: isSelected ? '0 0 20px rgba(255,215,0,0.3)' : 'none',
               }}>
-                {card ? card.name : s.label}
+                <span style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%',
+                  height: '100%',
+                  fontSize: card ? '7px' : '6px',
+                  lineHeight: '1.1',
+                  textAlign: 'center',
+                  wordBreak: 'break-word',
+                }}>
+                  {displayName}
+                </span>
               </div>
               {isSelected && <div style={{ fontSize: 5, color: '#FFD700', marginTop: 2 }}>PLACE</div>}
             </div>
@@ -169,6 +259,10 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
   };
 
   if (!isReferee) return null;
+
+  // ── Get live team names with formation ──
+  const liveFormation1 = gs.team1Formation || '4-4-2';
+  const liveFormation2 = gs.team2Formation || '4-4-2';
 
   return (
     <div style={STYLES.container}>
@@ -255,7 +349,7 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
 
       {/* ── REFEREE PITCH VIEW ── */}
       <div style={STYLES.panel}>
-        <h3 style={STYLES.header}>⚽ Tactical Pitch — Click empty spots to place selected players</h3>
+        <h3 style={STYLES.header}>⚽ Setup Pitch — Place players on empty spots</h3>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
           <RefereePitchView
             formation={gs.team1Formation || '4-4-2'}
@@ -278,30 +372,24 @@ export default function RefereeDashboard({ gs: propGs, gameState, socket, isRefe
         </div>
       </div>
 
-      {/* ── LIVE DEMONSTRATION VIEW (Referee sees what reviewer is doing) ── */}
+      {/* ── LIVE DEMONSTRATION VIEW (EXACTLY what reviewer sees) ── */}
       {gs.deepTactics?.phase === 'LIVE_DEMO' && (
         <div style={{ ...STYLES.panel, border: '2px solid #4caf50', background: '#0a1a0a' }}>
           <h3 style={{ ...STYLES.header, color: '#4caf50' }}>
             🔴 LIVE DEMONSTRATION — {gs.deepTactics?.activeDemonstrator?.name || 'Reviewer'}
           </h3>
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-            <RefereePitchView
-              formation={gs.team1Formation || '4-4-2'}
+            <LivePitchView
+              formation={liveFormation1}
               slots={livePitchState.team1Slots || []}
-              title={`${gs.team1Name || 'Team 1'} (Live)`}
+              title={`${gs.team1Name || 'Team 1'} (${liveFormation1})`}
               color="#1565c0"
-              onSpotClick={() => {}}
-              selectedPlayer={null}
-              isReferee={false}
             />
-            <RefereePitchView
-              formation={gs.team2Formation || '4-4-2'}
+            <LivePitchView
+              formation={liveFormation2}
               slots={livePitchState.team2Slots || []}
-              title={`${gs.team2Name || 'Team 2'} (Live)`}
+              title={`${gs.team2Name || 'Team 2'} (${liveFormation2})`}
               color="#b71c1c"
-              onSpotClick={() => {}}
-              selectedPlayer={null}
-              isReferee={false}
             />
           </div>
           <div style={{ fontSize: '0.8rem', color: '#aaa', marginTop: 8, display: 'flex', justifyContent: 'space-between' }}>
