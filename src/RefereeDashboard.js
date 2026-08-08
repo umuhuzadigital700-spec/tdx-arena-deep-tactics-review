@@ -1,4 +1,4 @@
-// src/RefereeDashboard.js - Complete Referee Control
+// src/RefereeDashboard.js - Referee sees pitch + player pool (FINAL)
 import React, { useState, useEffect, useCallback } from 'react';
 
 const STYLES = {
@@ -6,9 +6,6 @@ const STYLES = {
   mainHeader: { color: '#fff', marginTop: 0, marginBottom: 20, fontSize: '1.5rem', borderBottom: '2px solid #222', paddingBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   panel: { background: '#1a1a2e', border: '1px solid #333', borderRadius: 8, padding: 16, marginBottom: 16, color: '#eee' },
   header: { margin: 0, marginBottom: 12, fontSize: '1.05rem', textTransform: 'uppercase', letterSpacing: 1, color: '#ffc107', display: 'flex', alignItems: 'center', gap: '8px' },
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12 },
-  card: { background: '#111', border: '1px solid #444', borderRadius: 6, padding: 12, textAlign: 'center', fontSize: '0.85rem', position: 'relative' },
-  badge: { position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: '50%' },
   button: { padding: '10px 16px', background: '#2c2c54', color: '#fff', border: '1px solid #444', borderRadius: 4, fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease' },
   buttonGold: { padding: '10px 16px', background: 'linear-gradient(135deg, #FFD700, #FFA500)', color: '#000', border: 'none', borderRadius: 4, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s ease' },
   buttonDanger: { padding: '10px 16px', background: '#dc3545', color: '#fff', border: 'none', borderRadius: 4, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s ease' },
@@ -19,6 +16,115 @@ const STYLES = {
 
 // ── Formation definitions ──
 const FORMATIONS = ['4-4-2', '4-3-3', '3-5-2', '4-5-1', '5-3-2', '4-2-3-1'];
+
+// ── Formation Slot Templates (for pitch display) ──
+const FORMATION_SLOTS = {
+  '4-4-2': [
+    { label: 'GK', top: 88, left: 50 }, { label: 'LB', top: 70, left: 15 }, { label: 'CB1', top: 70, left: 35 }, { label: 'CB2', top: 70, left: 65 }, { label: 'RB', top: 70, left: 85 },
+    { label: 'LM', top: 50, left: 15 }, { label: 'CM1', top: 50, left: 35 }, { label: 'CM2', top: 50, left: 65 }, { label: 'RM', top: 50, left: 85 },
+    { label: 'ST1', top: 25, left: 35 }, { label: 'ST2', top: 25, left: 65 }
+  ],
+  '4-3-3': [
+    { label: 'GK', top: 88, left: 50 }, { label: 'LB', top: 70, left: 15 }, { label: 'CB1', top: 70, left: 35 }, { label: 'CB2', top: 70, left: 65 }, { label: 'RB', top: 70, left: 85 },
+    { label: 'CM1', top: 50, left: 25 }, { label: 'CM2', top: 50, left: 50 }, { label: 'CM3', top: 50, left: 75 },
+    { label: 'LW', top: 20, left: 20 }, { label: 'ST', top: 15, left: 50 }, { label: 'RW', top: 20, left: 80 }
+  ],
+  '3-5-2': [
+    { label: 'GK', top: 88, left: 50 }, { label: 'CB1', top: 70, left: 25 }, { label: 'CB2', top: 70, left: 50 }, { label: 'CB3', top: 70, left: 75 },
+    { label: 'LWB', top: 52, left: 10 }, { label: 'CM1', top: 50, left: 30 }, { label: 'CM2', top: 50, left: 50 }, { label: 'CM3', top: 50, left: 70 }, { label: 'RWB', top: 52, left: 90 },
+    { label: 'ST1', top: 22, left: 35 }, { label: 'ST2', top: 22, left: 65 }
+  ],
+  '4-5-1': [
+    { label: 'GK', top: 88, left: 50 }, { label: 'LB', top: 70, left: 15 }, { label: 'CB1', top: 70, left: 35 }, { label: 'CB2', top: 70, left: 65 }, { label: 'RB', top: 70, left: 85 },
+    { label: 'LM', top: 50, left: 10 }, { label: 'CM1', top: 50, left: 30 }, { label: 'CM2', top: 50, left: 50 }, { label: 'CM3', top: 50, left: 70 }, { label: 'RM', top: 50, left: 90 },
+    { label: 'ST', top: 18, left: 50 }
+  ],
+  '5-3-2': [
+    { label: 'GK', top: 88, left: 50 }, { label: 'LWB', top: 68, left: 10 }, { label: 'CB1', top: 70, left: 28 }, { label: 'CB2', top: 70, left: 50 }, { label: 'CB3', top: 70, left: 72 }, { label: 'RWB', top: 68, left: 90 },
+    { label: 'CM1', top: 48, left: 25 }, { label: 'CM2', top: 48, left: 50 }, { label: 'CM3', top: 48, left: 75 },
+    { label: 'ST1', top: 22, left: 35 }, { label: 'ST2', top: 22, left: 65 }
+  ],
+  '4-2-3-1': [
+    { label: 'GK', top: 88, left: 50 }, { label: 'LB', top: 72, left: 15 }, { label: 'CB1', top: 72, left: 35 }, { label: 'CB2', top: 72, left: 65 }, { label: 'RB', top: 72, left: 85 },
+    { label: 'DM1', top: 57, left: 35 }, { label: 'DM2', top: 57, left: 65 },
+    { label: 'LAM', top: 38, left: 20 }, { label: 'CAM', top: 35, left: 50 }, { label: 'RAM', top: 38, left: 80 },
+    { label: 'ST', top: 18, left: 50 }
+  ]
+};
+
+// ── Pitch Component for Referee ──
+function RefereePitchView({ formation, slots, title, color, onSpotClick, selectedPlayer, isReferee }) {
+  const slotDefs = FORMATION_SLOTS[formation] || FORMATION_SLOTS['4-4-2'];
+  
+  return (
+    <div style={{ flex: 1, minWidth: '240px', background: '#111', border: '1px solid #333', padding: 12, borderRadius: 8 }}>
+      <div style={{ fontSize: 13, fontWeight: 'bold', color, marginBottom: 8, textTransform: 'uppercase' }}>{title} ({formation})</div>
+      <div style={{ 
+        position: 'relative', 
+        width: '100%', 
+        paddingTop: '130%', 
+        background: 'linear-gradient(180deg, #1b4d22 0%, #0f3014 100%)', 
+        border: '1px solid #444', 
+        borderRadius: 6, 
+        overflow: 'hidden' 
+      }}>
+        {/* Pitch markings */}
+        <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 1, background: 'rgba(255,255,255,0.15)' }} />
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 50, height: 50, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.15)' }} />
+        
+        {slotDefs.map((s, idx) => {
+          const card = slots && slots[idx];
+          const isEmpty = !card;
+          const isSelected = selectedPlayer !== null && isEmpty;
+          
+          return (
+            <div 
+              key={idx} 
+              onClick={() => {
+                if (isReferee && isSelected && onSpotClick) {
+                  onSpotClick(idx);
+                }
+              }}
+              style={{ 
+                position: 'absolute', 
+                top: `${s.top}%`, 
+                left: `${s.left}%`, 
+                transform: 'translate(-50%, -50%)', 
+                textAlign: 'center',
+                cursor: isReferee && isSelected ? 'pointer' : 'default',
+              }}
+            >
+              <div style={{ 
+                width: 36, 
+                height: 36, 
+                borderRadius: '50%', 
+                background: card ? color : 'rgba(255,255,255,0.08)', 
+                border: isSelected ? '2px dashed #FFD700' : card ? '2px solid #fff' : '1px solid rgba(255,255,255,0.2)',
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                fontSize: 7, 
+                fontWeight: 'bold', 
+                color: '#fff', 
+                padding: 2, 
+                boxSizing: 'border-box', 
+                overflow: 'hidden', 
+                wordBreak: 'break-all',
+                transition: 'all 0.2s ease',
+                boxShadow: isSelected ? '0 0 20px rgba(255,215,0,0.3)' : 'none',
+              }}>
+                {card ? card.name : s.label}
+              </div>
+              {isSelected && (
+                <div style={{ fontSize: 5, color: '#FFD700', marginTop: 2 }}>PLACE</div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 function RefereeDashboard({ gs: propGs, gameState, socket, isReferee }) {
   const gs = gameState || propGs || {};
@@ -34,6 +140,14 @@ function RefereeDashboard({ gs: propGs, gameState, socket, isReferee }) {
   // ── Handlers ──
   const handleFormationChange = (team, formation) => {
     socket.emit('refSetFormation', { team, formation });
+  };
+
+  const handleSpotClick = (half, slotIndex) => {
+    if (!selectedPlayer) return;
+    const halfSlots = half === 'team1' ? team1Slots : team2Slots;
+    if (halfSlots[slotIndex]) return;
+    socket.emit('refPlacePlayerOnPitch', { half, slotIndex, playerId: selectedPlayer });
+    setSelectedPlayer(null);
   };
 
   const handleAssignReviewFan = (viewerId, role) => {
@@ -139,7 +253,32 @@ function RefereeDashboard({ gs: propGs, gameState, socket, isReferee }) {
         )}
       </div>
 
-      {/* ── Referee Controls ── */}
+      {/* ── Pitch View (Referee sees the pitch!) ── */}
+      <div style={STYLES.panel}>
+        <h3 style={STYLES.header}>⚽ Tactical Pitch — Click empty spots to place selected players</h3>
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+          <RefereePitchView
+            formation={gs.team1Formation || '4-4-2'}
+            slots={team1Slots}
+            title={gs.team1Name || "Team 1"}
+            color="#1565c0"
+            onSpotClick={(idx) => handleSpotClick('team1', idx)}
+            selectedPlayer={selectedPlayer}
+            isReferee={true}
+          />
+          <RefereePitchView
+            formation={gs.team2Formation || '4-4-2'}
+            slots={team2Slots}
+            title={gs.team2Name || "Team 2"}
+            color="#b71c1c"
+            onSpotClick={(idx) => handleSpotClick('team2', idx)}
+            selectedPlayer={selectedPlayer}
+            isReferee={true}
+          />
+        </div>
+      </div>
+
+      {/* ── Controls & Roster ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         <div>
           <div style={STYLES.panel}>
