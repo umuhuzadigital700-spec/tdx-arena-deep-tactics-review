@@ -1,4 +1,4 @@
-// src/DeepTacticsReview.js - Full Interactive Demonstration Pitch (FULLY WORKING)
+// src/DeepTacticsReview.js - FINAL WORKING VERSION
 import React, { useState, useEffect, useRef } from 'react';
 
 const DEEP_TACTICS_STYLES = {
@@ -13,7 +13,7 @@ const DEEP_TACTICS_STYLES = {
     display: 'flex',
     flexDirection: 'column',
     padding: 'clamp(8px, 2vw, 16px)',
-    fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
+    fontFamily: "'Segoe UI', -apple-system, sans-serif",
     color: '#fff',
   },
   header: {
@@ -130,6 +130,7 @@ const DEEP_TACTICS_STYLES = {
   },
 };
 
+// ── CORRECT FORMATION SLOTS ──
 const FORMATION_SLOTS_DTR = {
   '4-4-2': [
     { label: 'ST1', top: 10, left: 35 }, { label: 'ST2', top: 10, left: 65 },
@@ -196,6 +197,15 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
   const pitchRef = useRef(null);
   const dragDataRef = useRef(null);
 
+  // ── UPDATE FROM PROPS ──
+  useEffect(() => {
+    if (gameState && gameState.deepTactics) {
+      setPitchState(gameState.deepTactics.pitchState || {});
+      setGs(gameState);
+    }
+  }, [gameState]);
+
+  // ── SOCKET LISTENERS ──
   useEffect(() => {
     if (!socket) return;
 
@@ -233,6 +243,7 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
     };
   }, [socket, isReviewFan]);
 
+  // ── CHECK ACTIVE DEMONSTRATOR ──
   useEffect(() => {
     const isActive = isReviewFan && 
       gs.deepTactics?.activeDemonstrator?.txId === user?.txId &&
@@ -241,11 +252,13 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
     setShowToolbar(isActive);
   }, [gs.deepTactics?.activeDemonstrator, user, hasControl, isReviewFan]);
 
+  // ── FORMATIONS ──
   const formation1 = gs.team1Formation || '4-4-2';
   const formation2 = gs.team2Formation || '4-4-2';
   const slots1 = FORMATION_SLOTS_DTR[formation1] || FORMATION_SLOTS_DTR['4-4-2'];
   const slots2 = FORMATION_SLOTS_DTR[formation2] || FORMATION_SLOTS_DTR['4-4-2'];
 
+  // ── PLAYER SLOTS ──
   const team1Slots = pitchState.team1Slots || [];
   const team2Slots = pitchState.team2Slots || [];
   const ballPos = pitchState.ballPosition || { x: 50, y: 50 };
@@ -254,6 +267,7 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
 
   const canInteract = isActiveDemonstrator;
 
+  // ── TOOL HANDLERS ──
   const handleToolClick = (tool) => {
     if (!canInteract) return;
     if (selectedTool === tool) {
@@ -287,6 +301,7 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
     socket.emit('demoSelectSpot', { half, slotIndex: index, action });
   };
 
+  // ── DRAG ──
   const handleDragStart = (e, half, index) => {
     if (!canInteract) return;
     e.preventDefault();
@@ -318,6 +333,7 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
     dragDataRef.current = null;
   };
 
+  // ── RENDER HALF ──
   const renderHalf = (half, slotDefs, teamSlots, teamName, teamColor, isTopHalf) => {
     return (
       <div style={{ 
@@ -341,10 +357,11 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
           {teamName || (half === 'team1' ? 'Team 1' : 'Team 2')} ({half === 'team1' ? formation1 : formation2})
         </div>
         {slotDefs.map((slot, idx) => {
-          const player = teamSlots[idx];
+          const player = teamSlots && teamSlots[idx] ? teamSlots[idx] : null;
           const isSelected = selectedSpots.includes(`${half}-${idx}`);
           const isAnimatingHighlight = animationStep?.highlightSlot === idx && animationStep?.half === half;
-          const displayName = player ? player.name : slot.label;
+          const hasPlayer = player && player.name;
+          const displayName = hasPlayer ? player.name : slot.label;
           const topPos = isTopHalf ? slot.top : (100 - slot.top);
 
           return (
@@ -354,10 +371,10 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
                 ...DEEP_TACTICS_STYLES.slotCircle,
                 top: `${topPos}%`,
                 left: `${slot.left}%`,
-                background: player ? teamColor : 'rgba(255,255,255,0.05)',
+                background: hasPlayer ? teamColor : 'rgba(255,255,255,0.05)',
                 border: isSelected ? '3px dashed #FFD700' : 
                         isAnimatingHighlight ? '3px solid #4caf50' :
-                        player ? '2px solid #fff' : '2px solid rgba(255,255,255,0.2)',
+                        hasPlayer ? '2px solid #fff' : '2px solid rgba(255,255,255,0.2)',
                 boxShadow: isSelected ? '0 0 20px rgba(255,215,0,0.3)' : 'none',
                 cursor: canInteract ? 'grab' : 'default',
                 zIndex: isSelected ? 10 : 2,
@@ -383,8 +400,8 @@ export default function DeepTacticsReview({ gameState, socket, user, onClose, is
                 justifyContent: 'center',
                 width: '100%',
                 height: '100%',
-                fontSize: player ? 'clamp(7px, 0.8vw, 9px)' : 'clamp(5px, 0.6vw, 7px)',
-                fontWeight: player ? 'bold' : 'normal',
+                fontSize: hasPlayer ? 'clamp(7px, 0.8vw, 9px)' : 'clamp(5px, 0.6vw, 7px)',
+                fontWeight: hasPlayer ? 'bold' : 'normal',
                 padding: '1px',
                 lineHeight: '1.1',
                 textAlign: 'center',
